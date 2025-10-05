@@ -1,10 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../../controllers/user.controller');
+const UserController = require('../../controllers/user.controller');
+const { verifyToken, authorizeRoles } = require('../../middlewares/auth.middleware');
+console.log({ verifyToken, authorizeRoles });
 
-// GET /api/v1/users?page=1&limit=5
-router.get('/', userController.getAllUsers);
+// router.get('/', verifyToken, authorizeRoles('admin'), UserController.getAll);
+router.get('/',UserController.getAll);
+router.get('/:id', verifyToken, authorizeRoles('admin', 'teacher'), UserController.getById);
 
-// ... các routes cho Thêm, Sửa, Xóa sẽ được thêm vào đây
+router.put('/:id', verifyToken, authorizeRoles('admin', 'teacher'), UserController.update);
+
+router.delete('/:id', verifyToken, authorizeRoles('admin'), UserController.delete);
 
 module.exports = router;
+

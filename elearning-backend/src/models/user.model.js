@@ -1,52 +1,45 @@
-// Giả sử bạn có một file cấu hình kết nối db như thế này
-const pool = require('../config/db.config.js'); 
+// src/models/user.model.js
+const pool = require('../config/db.config');
 
-const User = {};
+class User {
+  static async findAll() {
+    const result = await pool.query('SELECT * FROM users ORDER BY createdat DESC');
+    return result.rows;
+  }
 
-// Hàm tìm user bằng email (dùng cho chức năng đăng nhập)
-User.findByEmail = async (email) => {
-    const query = {
-        text: 'SELECT * FROM Users WHERE Email = $1',
-        values: [email],
-    };
-    const { rows } = await pool.query(query);
-    return rows[0];
-};
+  static async findById(id) {
+    const result = await pool.query('SELECT * FROM users WHERE userid = $1', [id]);
+    return result.rows[0];
+  }
 
-// Hàm tìm user bằng ID
-User.findById = async (id) => {
-    const query = {
-        text: 'SELECT UserID, FullName, Email, Role, ProfilePicture FROM Users WHERE UserID = $1',
-        values: [id],
-    };
-    const { rows } = await pool.query(query);
-    return rows[0];
-};
+  static async findByEmail(email) {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    return result.rows[0];
+  }
 
-// Hàm tạo user mới (dùng cho chức năng đăng ký)
-User.create = async (fullName, email, passwordHash, role) => {
-    const query = {
-        text: 'INSERT INTO Users (FullName, Email, PasswordHash, Role) VALUES ($1, $2, $3, $4) RETURNING *',
-        values: [fullName, email, passwordHash, role],
-    };
-    const { rows } = await pool.query(query);
-    return rows[0];
-};
+  static async create({ fullname, email, passwordhash, role, profilepicture }) {
+    const result = await pool.query(
+      `INSERT INTO users (fullname, email, passwordhash, role, profilepicture, createdat)
+       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
+      [fullname, email, passwordhash, role, profilepicture]
+    );
+    return result.rows[0];
+  }
 
-// Hàm lấy danh sách user với phân trang
-User.findAll = async (page = 1, limit = 10) => {
-    const offset = (page - 1) * limit;
-    // Câu lệnh này vừa lấy dữ liệu trang hiện tại, vừa đếm tổng số dòng
-    const query = {
-        text: `SELECT UserID, FullName, Email, Role, CreatedAt, COUNT(*) OVER() AS total_count 
-               FROM Users 
-               ORDER BY UserID 
-               LIMIT $1 OFFSET $2`,
-        values: [limit, offset],
-    };
-    const { rows } = await pool.query(query);
-    return rows;
-};
-// ... Thêm các hàm khác như update, delete nếu cần
+  static async update(id, { fullname, email, role, profilepicture }) {
+    const result = await pool.query(
+      `UPDATE users 
+       SET fullname=$1, email=$2, role=$3, profilepicture=$4
+       WHERE userid=$5 RETURNING *`,
+      [fullname, email, role, profilepicture, id]
+    );
+    return result.rows[0];
+  }
+
+  static async delete(id) {
+    await pool.query('DELETE FROM users WHERE userid = $1', [id]);
+    return { message: 'User deleted successfully' };
+  }
+}
 
 module.exports = User;
