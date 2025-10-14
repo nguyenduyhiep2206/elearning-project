@@ -1,0 +1,14 @@
+{
+  "dialect": "postgres",
+  "database": "elearndb",
+  "username": "elearndb_owner",
+  "password": "npg_Q3sU7gTEzHup",
+  "host": "ep-muddy-mountain-a4bnlpnx-pooler.us-east-1.aws.neon.tech",
+  "port": 5432,
+  "dialectOptions": {
+    "ssl": {
+      "require": true,
+      "rejectUnauthorized": false
+    }
+  }
+}
