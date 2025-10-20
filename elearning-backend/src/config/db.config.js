@@ -1,6 +1,7 @@
 // src/config/db.config.js
-const { Sequelize } = require('sequelize');
 require('dotenv').config();
+
+const { Sequelize } = require('sequelize');
 
 // Kiểm tra xem biến môi trường DATABASE_URL đã được thiết lập chưa
 if (!process.env.DATABASE_URL) {
