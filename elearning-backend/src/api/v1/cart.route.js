@@ -5,7 +5,7 @@ const authMiddleware = require('../../middlewares/auth.middleware'); // Middlewa
 
 // Tất cả các route trong file này đều yêu cầu người dùng phải đăng nhập
 // Middleware này sẽ chạy trước tất cả các controller
-router.use(authMiddleware);
+router.use(authMiddleware.verifyToken);
 
 // POST /api/cart - Thêm một khóa học vào giỏ hàng
 router.post('/', cartController.handleAddToCart);

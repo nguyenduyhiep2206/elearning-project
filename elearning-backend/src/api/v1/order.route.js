@@ -4,7 +4,7 @@ const orderController = require('../../controllers/order.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 
 // Tất cả các route về đơn hàng đều yêu cầu xác thực
-router.use(authMiddleware);
+router.use(authMiddleware.verifyToken);
 
 // GET /api/v1/orders - Lấy lịch sử đơn hàng của người dùng
 router.get('/', orderController.getUserOrders);

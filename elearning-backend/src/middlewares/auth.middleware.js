@@ -1,33 +1,141 @@
-const jwt = require('jsonwebtoken');
-require('dotenv').config(); // Nạp các biến từ file .env
+const authService = require('../services/auth.service');
+const { users } = require('../models');
 
-const authMiddleware = (req, res, next) => {
-    // Lấy token từ header 'Authorization'
-    // Client thường gửi token theo định dạng: "Bearer [token]"
-    const authHeader = req.header('Authorization');
-
-    // Kiểm tra xem header Authorization hoặc token có tồn tại không
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Không có quyền truy cập. Vui lòng đăng nhập.' });
-    }
-
-    // Tách lấy phần token từ chuỗi "Bearer [token]"
-    const token = authHeader.split(' ')[1];
-
+/**
+ * Middleware xác thực JWT token
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const verifyToken = async (req, res, next) => {
     try {
-        // Xác thực token bằng chuỗi bí mật
-        const decodedPayload = jwt.verify(token, process.env.JWT_SECRET);
+        // Lấy token từ header hoặc cookie
+        const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies.authToken;
+        
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token không được cung cấp',
+                data: null
+            });
+        }
 
-        // Nếu token hợp lệ, payload đã giải mã sẽ được trả về.
-        // Gắn payload (chứa thông tin user như id, email, role) vào đối tượng request.
-        req.user = decodedPayload;
+        // Xác thực token
+        const decoded = await authService.verifyToken(token);
+        
+        // Lấy thông tin user từ database
+        const user = await users.findOne({
+            where: { userid: decoded.userId },
+            attributes: { exclude: ['passwordhash'] } // Bỏ mật khẩu
+        });
 
-        // Chuyển sang middleware hoặc controller tiếp theo
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Người dùng không tồn tại',
+                data: null
+            });
+        }
+
+        // Thêm thông tin user vào request object
+        req.user = {
+            id: user.userid,
+            fullName: user.fullname,
+            email: user.email,
+            role: user.role,
+            isActive: user.isactive,
+            createdAt: user.createdat,
+            lastLogin: user.lastlogin
+        };
+
+        // Thêm thông tin token vào request object
+        req.token = token;
+        req.tokenPayload = decoded;
+
         next();
     } catch (error) {
-        // Nếu token không hợp lệ (hết hạn, sai chữ ký,...)
-        res.status(403).json({ message: 'Token không hợp lệ hoặc đã hết hạn.' });
+        console.error('Auth middleware error:', error.message);
+        return res.status(401).json({
+            success: false,
+            message: 'Token không hợp lệ hoặc đã hết hạn',
+            data: null
+        });
     }
 };
 
-module.exports = authMiddleware;
+/**
+ * Middleware kiểm tra quyền admin
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: 'Chưa xác thực',
+            data: null
+        });
+    }
+
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Không có quyền truy cập',
+            data: null
+        });
+    }
+
+    next();
+};
+
+/**
+ * Middleware kiểm tra quyền instructor
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const requireInstructor = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: 'Chưa xác thực',
+            data: null
+        });
+    }
+
+    if (!['admin', 'instructor'].includes(req.user.role)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Không có quyền truy cập',
+            data: null
+        });
+    }
+
+    next();
+};
+
+/**
+ * Middleware kiểm tra quyền user (student, instructor, admin)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const requireAuth = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: 'Chưa xác thực',
+            data: null
+        });
+    }
+
+    next();
+};
+
+module.exports = {
+    verifyToken,
+    requireAdmin,
+    requireInstructor,
+    requireAuth
+};

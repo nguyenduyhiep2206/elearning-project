@@ -4,7 +4,7 @@ const favoriteController = require('../../controllers/favorite.controller');
 const authMiddleware = require('../../middlewares/auth.middleware');
 
 // Mọi route trong file này đều yêu cầu người dùng phải đăng nhập
-router.use(authMiddleware);
+router.use(authMiddleware.verifyToken);
 
 //GET /api/v1/favorites - Lấy danh sách yêu thích của người dùng
 router.get('/', favoriteController.getFavorites);
