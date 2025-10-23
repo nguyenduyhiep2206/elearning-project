@@ -1,61 +1,35 @@
-// src/services/category.service.js
-const { categories } = require('../models/'); // Import model từ file index của models
+// services/category.service.js
 
-const categoryService = {
-    /**
-     * Tạo mới một danh mục
-     * @param {object} data - Dữ liệu cho danh mục mới (categoryName, description)
-     * @returns {Promise<Category>}
-     */
-    createCategory: async (data) => {
-        // Sequelize sẽ tự động ánh xạ categoryName -> categoryname khi tạo record
-        return await categories.create(data);
-    },
+const { categories, courses } = require('../models');
 
-    /**
-     * Lấy tất cả danh mục
-     * @returns {Promise<Category[]>}
-     */
-    getAllCategories: async () => {
-        return await categories.findAll();
-    },
-
-    /**
-     * Lấy một danh mục theo ID
-     * @param {number} id - ID của danh mục
-     * @returns {Promise<Category|null>}
-     */
-    getCategoryById: async (id) => {
-        return await categories.findByPk(id);
-    },
-
-    /**
-     * Cập nhật danh mục
-     * @param {number} id - ID của danh mục cần cập nhật
-     * @param {object} data - Dữ liệu cần cập nhật
-     * @returns {Promise<Category|null>}
-     */
-    updateCategory: async (id, data) => {
-        const category = await categories.findByPk(id);
-        if (category) {
-            return await category.update(data);
-        }
-        return null;
-    },
-
-    /**
-     * Xóa danh mục
-     * @param {number} id - ID của danh mục cần xóa
-     * @returns {Promise<boolean>}
-     */
-    deleteCategory: async (id) => {
-        const category = await categories.findByPk(id);
-        if (category) {
-            await category.destroy();
-            return true;
-        }
-        return false;
-    }
+exports.getAllCategories = async () => {
+  return await categories.findAll({
+    include: [{
+      model: courses,
+      as: 'courses',
+      attributes: ['courseid', 'coursename'] // Chỉ lấy thông tin cơ bản
+    }]
+  });
 };
 
-module.exports = categoryService;
+exports.getCategoryById = async (id) => {
+  return await categories.findByPk(id, {
+    include: [{ model: courses, as: 'courses' }] // Lấy tất cả khóa học
+  });
+};
+
+exports.createCategory = async (categoryData) => {
+  return await categories.create(categoryData);
+};
+
+exports.updateCategory = async (id, categoryData) => {
+  const category = await categories.findByPk(id);
+  if (!category) throw new Error('Category not found');
+  return await category.update(categoryData);
+};
+
+exports.deleteCategory = async (id) => {
+  const category = await categories.findByPk(id);
+  if (!category) throw new Error('Category not found');
+  return await category.destroy();
+};
