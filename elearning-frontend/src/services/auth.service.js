@@ -1,155 +1,123 @@
-import api from './axios.js'
+import api from './api';
 
-export const authService = {
-  // Login user
-  async login(email, password) {
+/**
+ * Service để xử lý các API liên quan đến authentication
+ */
+class AuthService {
+  /**
+   * Đăng nhập người dùng
+   * @param {Object} credentials - Thông tin đăng nhập
+   * @param {string} credentials.email - Email người dùng
+   * @param {string} credentials.password - Mật khẩu người dùng
+   * @returns {Promise<Object>} - Thông tin user và token
+   */
+  async login(credentials) {
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-      })
+      console.log('🌐 AuthService: Gửi request đến /auth/login với:', credentials);
+      const response = await api.post('/auth/login', credentials);
+      
+      console.log('📥 AuthService: Nhận response từ server:', response.data);
+      
+      // Backend trả về format: { message, token, user }
       return {
         success: true,
-        data: response.data,
-      }
+        data: {
+          user: response.data.user,
+          token: response.data.token,
+        },
+        message: response.data.message,
+      };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Đăng nhập thất bại',
-      }
+      console.log('💥 AuthService: Lỗi từ server:', error.response?.data);
+      // Xử lý lỗi từ backend
+      const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại';
+      throw new Error(errorMessage);
     }
-  },
+  }
 
-  // Register user
-  async register(fullName, email, password) {
+  /**
+   * Đăng ký người dùng mới
+   * @param {Object} userData - Thông tin đăng ký
+   * @param {string} userData.fullName - Họ tên người dùng
+   * @param {string} userData.email - Email người dùng
+   * @param {string} userData.password - Mật khẩu người dùng
+   * @returns {Promise<Object>} - Thông tin user và token
+   */
+  async register(userData) {
     try {
-      const response = await api.post('/auth/register', {
-        fullName,
-        email,
-        password,
-      })
+      const response = await api.post('/auth/register', userData);
+      
       return {
         success: true,
-        data: response.data,
-      }
+        data: {
+          user: response.data.data.user,
+          token: response.data.data.token,
+        },
+        message: response.data.message,
+      };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Đăng ký thất bại',
-      }
+      const errorMessage = error.response?.data?.message || 'Đăng ký thất bại';
+      throw new Error(errorMessage);
     }
-  },
+  }
 
-  // Logout user
+  /**
+   * Đăng xuất người dùng
+   * @returns {Promise<Object>} - Kết quả đăng xuất
+   */
   async logout() {
     try {
-      await api.post('/auth/logout')
-      return { success: true }
+      const response = await api.post('/auth/logout');
+      return {
+        success: true,
+        message: response.data.message,
+      };
     } catch (error) {
-      // Even if logout fails on server, we should clear local data
-      return { success: true }
+      const errorMessage = error.response?.data?.message || 'Đăng xuất thất bại';
+      throw new Error(errorMessage);
     }
-  },
+  }
 
-  // Verify token
+  /**
+   * Xác thực token và lấy thông tin user
+   * @returns {Promise<Object>} - Thông tin user
+   */
   async verifyToken() {
     try {
-      const response = await api.get('/auth/verify')
+      const response = await api.get('/auth/verify');
       return {
         success: true,
-        data: response.data,
-      }
+        data: {
+          user: response.data.data.user,
+        },
+        message: response.data.message,
+      };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Xác thực token thất bại',
-      }
+      const errorMessage = error.response?.data?.message || 'Token không hợp lệ';
+      throw new Error(errorMessage);
     }
-  },
+  }
 
-  // Get current user
+  /**
+   * Lấy thông tin user hiện tại
+   * @returns {Promise<Object>} - Thông tin user
+   */
   async getCurrentUser() {
     try {
-      const response = await api.get('/auth/me')
+      const response = await api.get('/auth/me');
       return {
         success: true,
-        data: response.data,
-      }
+        data: {
+          user: response.data.data.user,
+        },
+        message: response.data.message,
+      };
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Lấy dữ liệu user thất bại',
-      }
+      const errorMessage = error.response?.data?.message || 'Không thể lấy thông tin user';
+      throw new Error(errorMessage);
     }
-  },
-
-  // Update user profile
-  async updateProfile(userData) {
-    try {
-      const response = await api.put('/auth/profile', userData)
-      return {
-        success: true,
-        data: response.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Cập nhật profile thất bại',
-      }
-    }
-  },
-
-  // Change password
-  async changePassword(currentPassword, newPassword) {
-    try {
-      const response = await api.put('/auth/change-password', {
-        currentPassword,
-        newPassword,
-      })
-      return {
-        success: true,
-        data: response.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Đổi mật khẩu thất bại',
-      }
-    }
-  },
-
-  // Forgot password
-  async forgotPassword(email) {
-    try {
-      const response = await api.post('/auth/forgot-password', { email })
-      return {
-        success: true,
-        data: response.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Đặt lại mật khẩu thất bại',
-      }
-    }
-  },
-
-  // Reset password
-  async resetPassword(token, newPassword) {
-    try {
-      const response = await api.post('/auth/reset-password', {
-        token,
-        newPassword,
-      })
-      return {
-        success: true,
-        data: response.data,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || ' Đặt lại mật khẩu thất bại',
-      }
-    }
-  },
+  }
 }
+
+// Export instance của service
+export default new AuthService();
