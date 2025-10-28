@@ -12,6 +12,7 @@ const orderRoutes = require('./order.route');  // Import order route
 const promotionRoutes = require('./promotion.route'); // Import promotion route
 const reviewRoutes = require('./review.route'); // Import review route
 
+
 // ... import các route khác ...
 
 // 2. Dòng quan trọng: Đảm bảo bạn đang dùng auth route với tiền tố '/auth'
