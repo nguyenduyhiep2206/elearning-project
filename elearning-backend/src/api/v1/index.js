@@ -11,16 +11,16 @@ const favoriteRoutes = require('./favorite.route'); // Import favorite route
 const orderRoutes = require('./order.route');  // Import order route
 const promotionRoutes = require('./promotion.route'); // Import promotion route
 const reviewRoutes = require('./review.route'); // Import review route
-const progressRoutes = require('./routes/progress.route');
-const chapterRoutes = require('./routes/chapter.route');
-const lessonRoutes = require('./routes/lesson.route');
-const lessonCommentRoutes = require('./routes/lessonComment.route');
-const assignmentRoutes = require('./routes/assignment.route');
-const submissionRoutes = require('./routes/submission.route');
-const quizRoutes = require('./routes/quiz.route');
-const quizQuestionRoutes = require('./routes/quizQuestion.route');
-const forumDiscussionRoutes = require('./routes/forumDiscussion.route');
-const forumReplyRoutes = require('./routes/forumReply.route');
+const progressRoutes = require('./progress.route');
+const chapterRoutes = require('./chapter.route');
+const lessonRoutes = require('./lesson.route');
+const lessonCommentRoutes = require('./lessonComment.route');
+const assignmentRoutes = require('./assignment.route');
+const submissionRoutes = require('./submission.route');
+const quizRoutes = require('./quiz.route');
+const quizQuestionRoutes = require('./quizQuestion.route');
+const forumDiscussionRoutes = require('./forumDiscussion.route');
+const forumReplyRoutes = require('./forumReply.route');
 
 // ... import các route khác ...
 
