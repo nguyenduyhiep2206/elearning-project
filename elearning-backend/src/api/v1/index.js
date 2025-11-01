@@ -5,8 +5,8 @@ const router = express.Router();
 
 const authRoutes = require('./auth.route'); // 1. Import auth route
 
-const courseRoutes = require('./course.route'); // Import course route
-const categoryRoutes = require('./category.route');
+const courseRoutes = require('./course.routes'); // Import course route
+const categoryRoutes = require('./category.routes');
 const cartRoutes = require('./cart.route'); // Import cart route
 const favoriteRoutes = require('./favorite.route'); // Import favorite route
 const orderRoutes = require('./order.route');  // Import order route

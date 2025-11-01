@@ -1,11 +1,23 @@
-// src/routes/message.routes.js
-
 const express = require('express');
 const router = express.Router();
 const messageController = require('../../controllers/message.controller');
-const authMiddleware = require('../../middlewares/auth.middleware'); // Import auth
+const { verifyToken } = require('../../middlewares/auth.middleware'); 
 const authorizeRole = require('../../middlewares/role.middleware');
-router.post('/', authMiddleware, authorizeRole(['Student', 'Teacher', 'Admin']), messageController.sendMessage);
-router.get('/chat/:otherUserId', authMiddleware, authorizeRole(['Student', 'Teacher', 'Admin']), messageController.getChatHistory);
+
+// Gửi tin nhắn
+router.post(
+  '/',
+  verifyToken,
+  authorizeRole(['Student', 'Teacher', 'Admin']),
+  messageController.sendMessage
+);
+
+// Lịch sử chat giữa 2 user
+router.get(
+  '/chat/:otherUserId',
+  verifyToken,
+  authorizeRole(['Student', 'Teacher', 'Admin']),
+  messageController.getChatHistory
+);
 
 module.exports = router;

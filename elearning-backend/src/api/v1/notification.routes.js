@@ -3,10 +3,10 @@
 const express = require('express');
 const router = express.Router();
 const notificationController = require('../../controllers/notification.controller');
-const authMiddleware = require('../../middlewares/auth.middleware'); // Import auth
+const { verifyToken } = require('../../middlewares/auth.middleware');
 const authorizeRole = require('../../middlewares/role.middleware');
-router.post('/', authMiddleware, authorizeRole(['Admin']), notificationController.createNotification);
-router.get('/', authMiddleware, notificationController.getUserNotifications);
-router.put('/read-status', authMiddleware, notificationController.updateNotificationReadStatus);
+router.post('/', verifyToken, authorizeRole(['Admin']), notificationController.createNotification);
+router.get('/', verifyToken, notificationController.getUserNotifications);
+router.put('/read-status', verifyToken, notificationController.updateNotificationReadStatus);
 
 module.exports = router;
