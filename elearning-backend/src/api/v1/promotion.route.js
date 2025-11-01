@@ -8,6 +8,6 @@ const adminMiddleware = require('../../middlewares/admin.middleware');
 router.post('/validate', promotionController.validateCode);
 
 // API tạo mã mới, yêu cầu đăng nhập và phải là Admin
-router.post('/', authMiddleware, adminMiddleware, promotionController.createCode);
+router.post('/', authMiddleware.verifyToken, adminMiddleware, promotionController.createCode);
 
 module.exports = router;

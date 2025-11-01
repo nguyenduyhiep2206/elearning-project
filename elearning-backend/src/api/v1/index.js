@@ -4,7 +4,8 @@ const express = require('express');
 const router = express.Router();
 
 const authRoutes = require('./auth.route'); // 1. Import auth route
-const userRouter = require('./user.route');
+
+const courseRoutes = require('./course.route'); // Import course route
 const categoryRoutes = require('./category.route');
 const cartRoutes = require('./cart.route'); // Import cart route
 const favoriteRoutes = require('./favorite.route'); // Import favorite route
@@ -17,7 +18,9 @@ const notificationRouter = require('./notification.routes');
 
 // 2. Dòng quan trọng: Đảm bảo bạn đang dùng auth route với tiền tố '/auth'
 router.use('/auth', authRoutes);
-router.use('/user',userRouter);
+
+router.use('/courses', courseRoutes); // Sử dụng course route với tiền tố '/courses'
+
 // ... router.use() cho các route khác ...
 router.use('./message',messageRouter);
 router.use('./notification',notificationRouter);

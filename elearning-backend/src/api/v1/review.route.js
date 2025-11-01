@@ -7,6 +7,6 @@ const authMiddleware = require('../../middlewares/auth.middleware');
 router.get('/:courseId', reviewController.getCourseReviews);
 
 // API để tạo đánh giá mới (yêu cầu đăng nhập)
-router.post('/:courseId', authMiddleware, reviewController.createReview);
+router.post('/:courseId', authMiddleware.verifyToken, reviewController.createReview);
 
 module.exports = router;
