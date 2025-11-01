@@ -1,0 +1,32 @@
+{
+  "name": "elearning-project",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "workspaces": [
+    "elearning-backend",
+    "elearning-frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=elearning-frontend\" \"npm run dev --workspace=elearning-backend\" ",
+    "dev:fe": "npm run dev --workspace=elearning-frontend",
+    "dev:be": "npm run dev --workspace=elearning-backend",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nguyenduyhiep2206/elearning-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nguyenduyhiep2206/elearning-project/issues"
+  },
+  "homepage": "https://github.com/nguyenduyhiep2206/elearning-project#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
