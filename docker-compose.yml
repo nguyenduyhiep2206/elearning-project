@@ -1,0 +1,30 @@
+services:
+  frontend:
+    build:
+      context: ./elearning-frontend
+      dockerfile: Dockerfile
+    container_name: docker-elearning-frontend
+    ports:
+      - "5173:5173"
+    
+    depends_on:
+      - backend
+    networks:
+      - net_work
+
+  backend:
+    build:
+      context: ./elearning-backend
+      dockerfile: Dockerfile
+    container_name: docker-elearning-backend
+    ports:
+      - "5143:5143"
+   
+    env_file:
+      - ./elearning-backend/.env
+    networks:
+      - net_work
+
+networks:
+  net_work:
+    driver: bridge
