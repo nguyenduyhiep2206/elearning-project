@@ -16,9 +16,9 @@ router.get('/instructor/:instructorId', courseController.getCoursesByInstructor)
 router.use(authMiddleware.verifyToken); // Middleware xác thực cho tất cả routes bên dưới
 
 // Routes chỉ dành cho instructor
-router.post('/', courseController.createCourse); // Tạo khóa học mới
-router.put('/:courseId', courseController.updateCourse); // Cập nhật khóa học
-router.delete('/:courseId', courseController.deleteCourse); // Xóa khóa học
+router.post('/', roleMiddleware.isInstructor, courseController.createCourse);
+router.put('/:courseId', roleMiddleware.isInstructor, courseController.updateCourse);
+router.delete('/:courseId', roleMiddleware.isInstructor, courseController.deleteCourse);
 router.get('/my-courses', courseController.getMyCourses); // Lấy khóa học của tôi
 
 module.exports = router;

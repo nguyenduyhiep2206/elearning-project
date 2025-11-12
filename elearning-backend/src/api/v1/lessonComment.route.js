@@ -1,19 +1,20 @@
-// api/routes/lessonComment.routes.js
-
 const express = require('express');
 const router = express.Router();
 const commentController = require('../../controllers/lessonComment.controller');
-// const authMiddleware = require('../../middlewares/auth');
+// IMPORT MIDDLEWARE
+const authMiddleware = require('../../middlewares/auth.middleware');
+// (Bạn có thể import thêm roleMiddleware nếu cần isStudent)
 
-// router.post('/', authMiddleware, commentController.createComment);
-router.post('/', commentController.createComment); // Tạm thời
+// API công khai (Tất cả mọi người)
+router.get('/lesson/:lessonId', commentController.getCommentsByLesson); 
 
-// router.put('/:id', authMiddleware, commentController.updateComment);
-router.put('/:id', commentController.updateComment); // Tạm thời
+// === BẢO VỆ CÁC API BÊN DƯỚI ===
+// Chỉ những người đã đăng nhập mới được bình luận, sửa, xóa
+router.use(authMiddleware.verifyToken);
 
-// router.delete('/:id', authMiddleware, commentController.deleteComment);
-router.delete('/:id', commentController.deleteComment); // Tạm thời
-
-router.get('/lesson/:lessonId', commentController.getCommentsByLesson); // API Lấy bình luận theo bài học
+// API riêng tư (Học viên đã đăng nhập)
+router.post('/', commentController.createComment);
+router.put('/:id', commentController.updateComment);
+router.delete('/:id', commentController.deleteComment);
 
 module.exports = router;

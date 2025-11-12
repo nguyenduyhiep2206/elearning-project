@@ -86,7 +86,7 @@ class CourseService {
     try {
       const newCourse = await courses.create({
         ...courseData,
-        instructorid: teacherId,
+        teacherid: teacherId,
         createdat: new Date(),
         updatedat: new Date()
       });
@@ -108,7 +108,7 @@ class CourseService {
       }
       
       // Kiểm tra quyền sở hữu (chỉ instructor tạo khóa học mới được sửa)
-      if (course.instructorid !== teacherId) {
+      if (course.teacherid !== teacherId) {
         throw new Error('Bạn không có quyền sửa khóa học này');
       }
       
@@ -134,7 +134,7 @@ class CourseService {
       }
       
       // Kiểm tra quyền sở hữu
-      if (course.instructorid !== teacherId) {
+      if (course.teacherid !== teacherId) {
         throw new Error('Bạn không có quyền xóa khóa học này');
       }
       
@@ -153,7 +153,7 @@ class CourseService {
       const offset = (page - 1) * limit;
       
       const { count, rows } = await courses.findAndCountAll({
-        where: { instructorid: teacherId },
+        where: { teacherid: teacherId },
         include: [
           {
             model: categories,

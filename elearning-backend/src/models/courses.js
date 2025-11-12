@@ -61,7 +61,14 @@ module.exports = function(sequelize, DataTypes) {
     language: {
       type: DataTypes.STRING(50),
       allowNull: true
-    }
+    },
+    enrollmentcount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0  // Quan trọng: Đặt giá trị mặc định là 0
+    },
+
+
   }, {
     sequelize,
     tableName: 'courses',

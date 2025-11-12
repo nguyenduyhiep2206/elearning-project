@@ -18,12 +18,21 @@ exports.getCommentsByLesson = async (req, res) => {
 
 exports.createComment = async (req, res) => {
   try {
-    // Giả sử studentId lấy từ auth middleware
-    // const studentId = req.user.id; 
-    // const newComment = await commentService.createComment({ ...req.body, studentid: studentId });
+    // 1. Lấy studentId từ auth middleware
+    const studentId = req.user.userid; 
     
-    // Tạm thời (chưa có auth):
-    const newComment = await commentService.createComment(req.body); // Body cần có { lessonid, studentid, content }
+    // 2. Lấy dữ liệu từ body
+    const { lessonid, content } = req.body;
+    if (!lessonid || !content) {
+      return res.status(400).json({ message: 'Thiếu lessonid hoặc content' });
+    }
+
+    // 3. Gọi service
+    const newComment = await commentService.createComment({ 
+      lessonid, 
+      content, 
+      studentid: studentId // Gán studentId từ token
+    });
     
     res.status(201).json(newComment);
   } catch (error) {
@@ -33,30 +42,45 @@ exports.createComment = async (req, res) => {
 
 exports.updateComment = async (req, res) => {
   try {
-    // const studentId = req.user.id; // Lấy từ auth
+    // 1. Lấy studentId từ auth
+    const studentId = req.user.userid; 
     const { content } = req.body;
     
-    // Tạm thời (chưa có auth)
-    const { studentId } = req.body; // Cần studentId để xác thực
-    
-    const updatedComment = await commentService.updateComment(req.params.id, studentId, content);
+    // 2. Gọi service (service của bạn đã có logic kiểm tra studentId, rất tốt!)
+    const updatedComment = await commentService.updateComment(
+      req.params.id, // commentId
+      studentId,     // studentId (để xác thực)
+      content        // Dữ liệu mới
+    );
     res.status(200).json(updatedComment);
   } catch (error) {
+    // Service sẽ văng lỗi 'Unauthorized' nếu sai chủ
+    if (error.message === 'Unauthorized' || error.message === 'Comment not found') {
+      return res.status(403).json({ message: 'Không có quyền sửa bình luận này' });
+    }
     handleError(res, error);
   }
 };
 
 exports.deleteComment = async (req, res) => {
   try {
-    // const studentId = req.user.id;
-    // const userRole = req.user.role;
-
-    // Tạm thời (chưa có auth)
-    const { studentId, userRole } = req.body; // Cần 2 cái này để xác thực
-
-    await commentService.deleteComment(req.params.id, studentId, userRole);
+    // 1. Lấy studentId và userRole từ auth (Giả sử bạn lưu role trong token)
+    const studentId = req.user.userid;
+    const userRole = req.user.role; // Ví dụ: 'student', 'instructor'
+    
+    // 2. Gọi service (service của bạn đã có logic kiểm tra role, rất tốt!)
+    await commentService.deleteComment(
+      req.params.id, // commentId
+      studentId,     // studentId (để xác thực)
+      userRole       // userRole (để cho phép admin/instructor xóa)
+    );
+    
     res.status(204).send();
   } catch (error) {
+    // Service sẽ văng lỗi 'Unauthorized'
+    if (error.message === 'Unauthorized' || error.message === 'Comment not found') {
+      return res.status(403).json({ message: 'Không có quyền xóa bình luận này' });
+    }
     handleError(res, error);
   }
 };

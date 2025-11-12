@@ -3,10 +3,17 @@
 const express = require('express');
 const router = express.Router();
 const lessonController = require('../../controllers/lesson.controller');
+const authMiddleware = require('../../middlewares/auth.middleware');
+const roleMiddleware = require('../../middlewares/role.middleware');
 
-router.post('/', lessonController.createLesson);
+
 router.get('/chapter/:chapterId', lessonController.getLessonsByChapter); // API Lấy các bài học theo chương
 router.get('/:id', lessonController.getLessonById); // API Lấy chi tiết 1 bài học
+router.use(authMiddleware.verifyToken);
+router.use(roleMiddleware.isInstructor);
+
+
+router.post('/', lessonController.createLesson);
 router.put('/:id', lessonController.updateLesson);
 router.delete('/:id', lessonController.deleteLesson);
 

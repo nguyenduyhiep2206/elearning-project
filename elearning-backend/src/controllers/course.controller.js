@@ -151,7 +151,7 @@ class CourseController {
       const teacherId = req.user.userid;
       const { page = 1, limit = 10 } = req.query;
       
-      const result = await courseService.getCoursesByInstructor(instructorId, page, limit);
+      const result = await courseService.getCoursesByInstructor(teacherId, page, limit);
       
       return apiResponse.success(res, result, 'Lấy khóa học của tôi thành công');
     } catch (error) {

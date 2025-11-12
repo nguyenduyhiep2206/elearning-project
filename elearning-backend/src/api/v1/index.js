@@ -21,6 +21,7 @@ const quizRoutes = require('./quiz.route');
 const quizQuestionRoutes = require('./quizQuestion.route');
 const forumDiscussionRoutes = require('./forumDiscussion.route');
 const forumReplyRoutes = require('./forumReply.route');
+const enrollmentRoutes = require('./enrollment.route');
 
 // ... import các route khác ...
 
@@ -46,5 +47,6 @@ router.use('/quizzes', quizRoutes);               // /api/v1/quizzes
 router.use('/questions', quizQuestionRoutes);     // /api/v1/questions
 router.use('/discussions', forumDiscussionRoutes); // /api/v1/discussions
 router.use('/replies', forumReplyRoutes);         // /api/v1/replies
+router.use('/enrollments', enrollmentRoutes); // /api/v1/enrollments
 
 module.exports = router;
