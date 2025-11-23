@@ -2,52 +2,41 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Component trang đăng nhập
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login, error, loading, clearError } = useAuth();
 
-  // State quản lý dữ liệu form
-  const [email, setEmail] = useState(''); // Email người dùng
-  const [password, setPassword] = useState(''); // Mật khẩu người dùng
-  const [showPassword, setShowPassword] = useState(false); // Hiển thị/ẩn mật khẩu
+  const [email, setEmail] = useState(''); 
+  const [password, setPassword] = useState(''); 
+  const [showPassword, setShowPassword] = useState(false); 
 
-  // Hàm chuyển đổi hiển thị mật khẩu
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // Hàm xử lý đăng nhập
   const handleLogin = async (e) => {
-    e.preventDefault(); // Ngăn chặn reload trang
+    e.preventDefault(); 
     
     console.log('🚀 Bắt đầu đăng nhập...');
 
-    // Xóa lỗi trước đó
     clearError();
 
     try {
       console.log('📤 Gửi request đăng nhập...');
-      // Gọi hàm đăng nhập từ context
       await login({ email, password });
       
       console.log('✅ Đăng nhập thành công!');
-      // Chuyển hướng đến dashboard khi đăng nhập thành công
       navigate('/dashboard');
     } catch (error) {
       console.log('❌ Đăng nhập thất bại:', error.message);
-      // Lỗi được xử lý bởi context
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Nội dung chính */}
       <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
-          {/* Container form đăng nhập */}
           <div className="bg-white py-8 px-6 md:shadow-lg md:border md:border-gray-200 md:rounded-lg md:px-8">
-            {/* Header form */}
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Đăng nhập
@@ -57,7 +46,6 @@ const LoginPage = () => {
               </p>
             </div>
 
-            {/* Thông báo lỗi */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm mb-4">
                 <div className="flex items-center">
@@ -70,9 +58,7 @@ const LoginPage = () => {
               </div>
             )}
 
-            {/* Form đăng nhập */}
             <form onSubmit={handleLogin} className="space-y-6">
-              {/* Trường Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email <span className="text-red-500">*</span>
@@ -88,7 +74,6 @@ const LoginPage = () => {
                 />
               </div>
 
-              {/* Trường Mật khẩu */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Mật khẩu <span className="text-red-500">*</span>
@@ -103,20 +88,17 @@ const LoginPage = () => {
                     className="w-full px-3 py-3 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                     required
                   />
-                  {/* Nút hiển thị/ẩn mật khẩu */}
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      // Icon mắt bị gạch (ẩn mật khẩu)
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                           d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
                       </svg>
                     ) : (
-                      // Icon mắt mở (hiển thị mật khẩu)
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -126,7 +108,6 @@ const LoginPage = () => {
                     )}
                   </button>
                 </div>
-                {/* Link quên mật khẩu */}
                 <div className="text-right mt-1">
                   <a href="#" className="text-sm text-blue-600 hover:text-blue-800">
                     Quên mật khẩu?
@@ -134,7 +115,6 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              {/* Nút đăng nhập */}
               <button
                 type="submit"
                 disabled={loading}
@@ -144,7 +124,6 @@ const LoginPage = () => {
               </button>
             </form>
 
-            {/* Đường phân cách */}
             <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -154,9 +133,7 @@ const LoginPage = () => {
               </div>
             </div>
 
-            {/* Các nút đăng nhập mạng xã hội */}
             <div className="space-y-3">
-              {/* Nút đăng nhập Google */}
               <button
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
@@ -169,7 +146,6 @@ const LoginPage = () => {
                 Tiếp tục với Google
               </button>
 
-              {/* Nút đăng nhập Facebook */}
               <button
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
@@ -179,7 +155,6 @@ const LoginPage = () => {
                 Tiếp tục với Facebook
               </button>
 
-              {/* Nút đăng nhập Apple */}
               <button
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
@@ -191,7 +166,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Các link footer */}
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
               <a href="#" className="text-blue-600 hover:text-blue-800">Đăng ký thông qua tổ chức của bạn</a>

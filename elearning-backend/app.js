@@ -1,20 +1,26 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import { sequelize } from './src/models/index.js'; 
+const express = require('express');
+const dotenv = require("dotenv");
+dotenv.config();
+const passport = require('passport');
+const {sequelize} = require('./src/models/index.js');
+const apiV1Routes = require('./src/api/v1/index.js');
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5143;
 
-// Middleware parse JSON
 app.use(express.json());
 
-// Route cơ bản
+app.use(passport.initialize());
+
+app.use('/api/v1', apiV1Routes);
+
 app.get('/', (req, res) => {
   res.send('Hello World from Express!');
 });
 
-// Hàm khởi động server
+// ✅ Hàm khởi động server
 const startServer = async () => {
   try {
     await sequelize.authenticate();
@@ -29,5 +35,4 @@ const startServer = async () => {
   }
 };
 
-// Gọi hàm
 startServer();

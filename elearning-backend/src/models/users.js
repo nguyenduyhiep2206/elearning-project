@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-module.exports = function(sequelize, DataTypes) {
+module.exports = function (sequelize, DataTypes) {
   return sequelize.define('users', {
     userid: {
       autoIncrement: true,
@@ -21,9 +21,11 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     role: {
-      type: DataTypes.STRING(20),
-      allowNull: false
+      type: DataTypes.ENUM('student', 'teacher', 'admin'),
+      allowNull: false,
+      defaultValue: 'student'
     },
+
     profilepicture: {
       type: DataTypes.STRING(255),
       allowNull: true

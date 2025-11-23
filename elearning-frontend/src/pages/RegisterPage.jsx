@@ -27,7 +27,6 @@ const RegisterPage = () => {
     setLoading(true);
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp');
       setLoading(false);
@@ -41,15 +40,12 @@ const RegisterPage = () => {
     }
 
     try {
-      // This would be replaced with actual API call
-      // await userService.register(formData);
-      
-      // Mock registration success
+
       await login({
         email: formData.email,
         password: formData.password,
       });
-      
+
       navigate('/dashboard');
     } catch (error) {
       setError(error.response?.data?.message || 'Đăng ký thất bại');
@@ -57,6 +53,12 @@ const RegisterPage = () => {
       setLoading(false);
     }
   };
+
+  const loginWithGoogle = () => {
+          navigate('/login');
+
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -75,14 +77,14 @@ const RegisterPage = () => {
             </Link>
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -99,7 +101,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
               />
             </div>
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Địa chỉ email
@@ -116,7 +118,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Mật khẩu
@@ -132,7 +134,7 @@ const RegisterPage = () => {
                 onChange={handleChange}
               />
             </div>
-            
+
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Xác nhận mật khẩu
@@ -179,6 +181,21 @@ const RegisterPage = () => {
               {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
             </button>
           </div>
+          <div>
+            <button
+              type="button"
+              onClick={loginWithGoogle}
+              className="mt-3 group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100"
+            >
+              <img
+                src="https://www.svgrepo.com/show/355037/google.svg"
+                alt="google icon"
+                className="w-5 h-5 mr-2"
+              />
+              Đăng ký bằng Google
+            </button>
+          </div>
+
         </form>
       </div>
     </div>

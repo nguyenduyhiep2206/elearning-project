@@ -22,8 +22,8 @@ router.use('/auth', authRoutes);
 router.use('/courses', courseRoutes); // Sử dụng course route với tiền tố '/courses'
 
 // ... router.use() cho các route khác ...
-router.use('./message',messageRouter);
-router.use('./notification',notificationRouter);
+router.use('/message',messageRouter);
+router.use('/notification',notificationRouter);
 router.use('/categories', categoryRoutes);
 router.use('/cart', cartRoutes); // Sử dụng cart route với tiền tố '/cart'
 router.use('/favorites', favoriteRoutes); // Sử dụng favorite route với tiền tố '/favorites'

@@ -1,123 +1,94 @@
 import api from './api';
 
-/**
- * Service để xử lý các API liên quan đến authentication
- */
+
 class AuthService {
-  /**
-   * Đăng nhập người dùng
-   * @param {Object} credentials - Thông tin đăng nhập
-   * @param {string} credentials.email - Email người dùng
-   * @param {string} credentials.password - Mật khẩu người dùng
-   * @returns {Promise<Object>} - Thông tin user và token
-   */
+
   async login(credentials) {
     try {
-      console.log('🌐 AuthService: Gửi request đến /auth/login với:', credentials);
-      const response = await api.post('/auth/login', credentials);
-      
-      console.log('📥 AuthService: Nhận response từ server:', response.data);
-      
-      // Backend trả về format: { message, token, user }
+      console.log('🌐 AuthService: POST /auth/login', credentials);
+      const res = await api.post('/auth/login', credentials);
       return {
         success: true,
         data: {
-          user: response.data.user,
-          token: response.data.token,
+          user: res.data.data?.user || res.data.user,
+          token: res.data.data?.token || res.data.token,
         },
-        message: response.data.message,
+        message: res.data.message,
       };
     } catch (error) {
-      console.log('💥 AuthService: Lỗi từ server:', error.response?.data);
-      // Xử lý lỗi từ backend
-      const errorMessage = error.response?.data?.message || 'Đăng nhập thất bại';
-      throw new Error(errorMessage);
+      console.error('💥 AuthService: Lỗi đăng nhập:', error.response?.data);
+      const msg = error.response?.data?.message || 'Đăng nhập thất bại';
+      throw new Error(msg);
     }
   }
 
-  /**
-   * Đăng ký người dùng mới
-   * @param {Object} userData - Thông tin đăng ký
-   * @param {string} userData.fullName - Họ tên người dùng
-   * @param {string} userData.email - Email người dùng
-   * @param {string} userData.password - Mật khẩu người dùng
-   * @returns {Promise<Object>} - Thông tin user và token
-   */
+ 
   async register(userData) {
     try {
-      const response = await api.post('/auth/register', userData);
-      
+      const res = await api.post('/auth/register', userData);
       return {
         success: true,
         data: {
-          user: response.data.data.user,
-          token: response.data.data.token,
+          user: res.data.data?.user || res.data.user,
+          token: res.data.data?.token || res.data.token,
         },
-        message: response.data.message,
+        message: res.data.message,
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Đăng ký thất bại';
-      throw new Error(errorMessage);
+      const msg = error.response?.data?.message || 'Đăng ký thất bại';
+      throw new Error(msg);
     }
   }
 
-  /**
-   * Đăng xuất người dùng
-   * @returns {Promise<Object>} - Kết quả đăng xuất
-   */
+ 
   async logout() {
     try {
-      const response = await api.post('/auth/logout');
-      return {
-        success: true,
-        message: response.data.message,
-      };
+      const res = await api.post('/auth/logout');
+      return { success: true, message: res.data.message };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Đăng xuất thất bại';
-      throw new Error(errorMessage);
+      const msg = error.response?.data?.message || 'Đăng xuất thất bại';
+      throw new Error(msg);
     }
   }
 
-  /**
-   * Xác thực token và lấy thông tin user
-   * @returns {Promise<Object>} - Thông tin user
-   */
+  
   async verifyToken() {
     try {
-      const response = await api.get('/auth/verify');
+      const res = await api.get('/auth/verify');
       return {
         success: true,
-        data: {
-          user: response.data.data.user,
-        },
-        message: response.data.message,
+        data: { user: res.data.data?.user || res.data.user },
+        message: res.data.message,
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Token không hợp lệ';
-      throw new Error(errorMessage);
+      const msg = error.response?.data?.message || 'Token không hợp lệ';
+      throw new Error(msg);
     }
   }
 
-  /**
-   * Lấy thông tin user hiện tại
-   * @returns {Promise<Object>} - Thông tin user
-   */
+
   async getCurrentUser() {
     try {
-      const response = await api.get('/auth/me');
+      const res = await api.get('/auth/me');
       return {
         success: true,
-        data: {
-          user: response.data.data.user,
-        },
-        message: response.data.message,
+        data: { user: res.data.data?.user || res.data.user },
+        message: res.data.message,
       };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Không thể lấy thông tin user';
-      throw new Error(errorMessage);
+      const msg = error.response?.data?.message || 'Không thể lấy thông tin user';
+      throw new Error(msg);
     }
+  }
+
+
+  loginWithGoogle() {
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/v1/auth/google`;
+  }
+
+  loginWithFacebook() {
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/v1/auth/facebook`;
   }
 }
 
-// Export instance của service
 export default new AuthService();

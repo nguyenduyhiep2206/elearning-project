@@ -3,46 +3,33 @@ const { users } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-/**
- * Đăng nhập người dùng
- * @param {string} email - Email người dùng
- * @param {string} password - Mật khẩu người dùng
- * @returns {Promise<{user: Object, token: string}>} - Thông tin user và JWT token
- * @throws {Error} - Lỗi khi đăng nhập thất bại
- */
+
 const login = async (email, password) => {
     try {
-        // Validate input
         if (!email || !password) {
             throw new Error('Email và mật khẩu là bắt buộc');
         }
 
-        // 1. Tìm người dùng bằng email
         const user = await users.findOne({ 
             where: { 
                 email: email.toLowerCase().trim() 
             } 
         });
 
-        // 2. Nếu không tìm thấy người dùng, báo lỗi
         if (!user) {
             throw new Error('Email hoặc mật khẩu không chính xác');
         }
 
-        // 3. Kiểm tra trạng thái tài khoản
         if (user.isactive === false) {
             throw new Error('Tài khoản đã bị vô hiệu hóa');
         }
 
-        // 4. So sánh mật khẩu người dùng nhập với mật khẩu đã mã hóa trong DB
         const isPasswordMatch = await bcrypt.compare(password, user.passwordhash);
 
-        // 5. Nếu mật khẩu không khớp, báo lỗi
         if (!isPasswordMatch) {
             throw new Error('Email hoặc mật khẩu không chính xác');
         }
 
-        // 6. Tạo JWT token
         const tokenPayload = { 
             userId: user.userid, 
             email: user.email, 
@@ -56,7 +43,6 @@ const login = async (email, password) => {
             audience: 'elearning-users'
         });
 
-        // 7. Cập nhật thời gian đăng nhập cuối
         await users.update(
             { lastlogin: new Date() },
             { where: { userid: user.userid } }
@@ -166,7 +152,7 @@ const register = async (fullName, email, password) => {
             fullname: fullName.trim(),
             email: email.toLowerCase().trim(),
             passwordhash: hashedPassword,
-            role: 'student', // Default role
+            role: 'Student', // Default role
             isactive: true,
             createdat: new Date(),
             lastlogin: null
