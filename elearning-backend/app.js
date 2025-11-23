@@ -17,11 +17,14 @@ app.use(cors({
 // Routes
 app.use('/api/v1', require('./src/api/v1'));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // Hàm để khởi động server
 const startServer = async () => {
   try {
+    // Set timezone cho PostgreSQL connection
+    await sequelize.query("SET timezone = 'Asia/Ho_Chi_Minh'");
+    
     // Kiểm tra kết nối database
     await sequelize.authenticate();
     console.log('✅ Kết nối database thành công qua Sequelize!');

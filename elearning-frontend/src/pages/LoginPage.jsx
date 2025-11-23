@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Component trang đăng nhập
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, error, loading, clearError } = useAuth();
+  const { login, error, loading, clearError, isAuthenticated, user } = useAuth();
+
+  // Nếu đã đăng nhập, chuyển hướng dựa trên role
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const userRole = user.role?.toLowerCase();
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   // State quản lý dữ liệu form
   const [email, setEmail] = useState(''); // Email người dùng
@@ -29,11 +43,20 @@ const LoginPage = () => {
     try {
       console.log('📤 Gửi request đăng nhập...');
       // Gọi hàm đăng nhập từ context
-      await login({ email, password });
+      const response = await login({ email, password });
       
       console.log('✅ Đăng nhập thành công!');
-      // Chuyển hướng đến dashboard khi đăng nhập thành công
-      navigate('/dashboard');
+      
+      // Chuyển hướng dựa trên role
+      const userRole = response?.user?.role?.toLowerCase();
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else {
+        // Student hoặc role khác -> về trang chủ
+        navigate('/');
+      }
     } catch (error) {
       console.log('❌ Đăng nhập thất bại:', error.message);
       // Lỗi được xử lý bởi context

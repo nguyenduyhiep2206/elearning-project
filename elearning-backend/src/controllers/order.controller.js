@@ -45,6 +45,21 @@ const orderController = {
       res.status(404).json({ message: error.message });
     }
   },
+
+  // [POST] /api/v1/orders/:orderId/cancel
+  cancelOrder: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { orderId } = req.params;
+      const order = await orderService.cancelOrder(Number(orderId), userId);
+      res.status(200).json({
+        message: 'Hủy đơn hàng thành công!',
+        data: order,
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
 };
 
 module.exports = orderController;

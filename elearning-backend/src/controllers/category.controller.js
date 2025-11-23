@@ -53,7 +53,16 @@ const categoryController = {
     // [PUT] /api/v1/categories/:id
     updateCategory: async (req, res) => {
         try {
-            const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
+            const { categoryName, description } = req.body;
+            if (!categoryName) {
+                return res.status(400).json({ message: "Category name is required." });
+            }
+            // Convert categoryName (camelCase) to categoryname (snake_case) for database
+            const updateData = {
+                categoryname: categoryName,
+                description: description || null
+            };
+            const updatedCategory = await categoryService.updateCategory(req.params.id, updateData);
             if (updatedCategory) {
                 res.status(200).json({
                     message: "Cập nhật danh mục thành công!",

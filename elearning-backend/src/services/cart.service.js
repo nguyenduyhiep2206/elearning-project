@@ -1,4 +1,4 @@
-const { cart, courses } = require('../models'); // Import các model cần thiết
+const { cart, courses, users } = require('../models'); // Import các model cần thiết
 
 /**
  * Thêm một khóa học vào giỏ hàng của người dùng.
@@ -36,6 +36,11 @@ const getcartByUserId = async (userId) => {
       model: courses, // Lấy kèm thông tin chi tiết của khóa học
       as: 'course', // Bạn cần định nghĩa alias 'course' trong association nếu có
       attributes: ['courseid', 'coursename', 'price', 'imageurl'], // Chỉ lấy các trường cần thiết
+      include: [{
+        model: users,
+        as: 'teacher',
+        attributes: ['fullname'],
+      }],
     }],
     order: [['addedat', 'DESC']], // Sắp xếp theo ngày thêm mới nhất
   });

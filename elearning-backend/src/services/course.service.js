@@ -1,4 +1,4 @@
-const { courses, categories, users, coursereviews } = require('../models');
+const { courses, categories, users, coursereviews, chapters, lessons } = require('../models');
 const { Op } = require('sequelize');
 
 class CourseService {
@@ -66,6 +66,20 @@ class CourseService {
             model: users,
             as: 'teacher',
             attributes: ['userid', 'fullname', 'email']
+          },
+          {
+            model: chapters,
+            as: 'chapters',
+            required: false,
+            attributes: ['chapterid'],
+            include: [
+              {
+                model: lessons,
+                as: 'lessons',
+                required: false,
+                attributes: ['lessonid']
+              }
+            ]
           }
         ]
       });
@@ -74,7 +88,18 @@ class CourseService {
         throw new Error('Không tìm thấy khóa học');
       }
       
-      return course;
+      // Tính số lượng chapters và lessons
+      const chaptersCount = course.chapters?.length || 0;
+      const lessonsCount = course.chapters?.reduce((total, chapter) => {
+        return total + (chapter.lessons?.length || 0);
+      }, 0) || 0;
+      
+      // Thêm thông tin vào course object
+      const courseData = course.toJSON();
+      courseData.chaptersCount = chaptersCount;
+      courseData.lessonsCount = lessonsCount;
+      
+      return courseData;
     } catch (error) {
       console.error('Error in getCourseById:', error);
       throw new Error(`Lỗi khi lấy khóa học: ${error.message}`);
@@ -195,7 +220,8 @@ class CourseService {
           }
         ],
         limit: parseInt(limit),
-        order: [['enrollmentcount', 'DESC']]
+        // Tạm thời sắp xếp theo ngày tạo mới nhất do không có cột enrollmentcount
+        order: [['createdat', 'DESC']]
       });
       
       return popularCourses;

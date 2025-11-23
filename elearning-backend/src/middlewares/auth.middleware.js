@@ -71,6 +71,10 @@ const verifyToken = async (req, res, next) => {
  */
 const requireAdmin = (req, res, next) => {
     if (!req.user) {
+        // Chỉ log trong development mode
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🚫 Admin check failed: No user in request');
+        }
         return res.status(401).json({
             success: false,
             message: 'Chưa xác thực',
@@ -78,14 +82,31 @@ const requireAdmin = (req, res, next) => {
         });
     }
 
-    if (req.user.role !== 'admin') {
+    // Kiểm tra role (case-insensitive để tránh lỗi)
+    const userRole = req.user.role?.toLowerCase();
+    if (userRole !== 'admin') {
+        // Chỉ log trong development mode
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🚫 Admin check failed:', {
+                userId: req.user.id,
+                email: req.user.email,
+                role: req.user.role,
+                requiredRole: 'admin',
+                path: req.path,
+                method: req.method
+            });
+        }
         return res.status(403).json({
             success: false,
-            message: 'Không có quyền truy cập',
-            data: null
+            message: 'Không có quyền truy cập. Chỉ admin mới có thể thực hiện thao tác này.',
+            data: {
+                currentRole: req.user.role,
+                requiredRole: 'admin'
+            }
         });
     }
 
+    // Không log khi thành công để tránh spam console
     next();
 };
 
@@ -104,11 +125,29 @@ const requireInstructor = (req, res, next) => {
         });
     }
 
-    if (!['admin', 'instructor'].includes(req.user.role)) {
+    // Kiểm tra role (case-insensitive để tránh lỗi)
+    const userRole = req.user.role?.toLowerCase();
+    const allowedRoles = ['admin', 'instructor', 'teacher'];
+    
+    if (!allowedRoles.includes(userRole)) {
+        // Chỉ log trong development mode
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🚫 Instructor check failed:', {
+                userId: req.user.id,
+                email: req.user.email,
+                role: req.user.role,
+                requiredRoles: allowedRoles,
+                path: req.path,
+                method: req.method
+            });
+        }
         return res.status(403).json({
             success: false,
-            message: 'Không có quyền truy cập',
-            data: null
+            message: 'Không có quyền truy cập. Chỉ giảng viên hoặc admin mới có thể thực hiện thao tác này.',
+            data: {
+                currentRole: req.user.role,
+                requiredRoles: allowedRoles
+            }
         });
     }
 

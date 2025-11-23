@@ -2,12 +2,15 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require('../../controllers/category.controller');
+const { verifyToken, requireAdmin } = require('../../middlewares/auth.middleware');
 
-// Các route này giờ đã khớp với tên hàm trong controller
+// GET routes - Public (có thể xem danh sách và chi tiết)
 router.get('/', categoryController.getAllCategories);
 router.get('/:id', categoryController.getCategoryById);
-router.post('/', categoryController.createCategory);
-router.put('/:id', categoryController.updateCategory);
-router.delete('/:id', categoryController.deleteCategory);
+
+// POST, PUT, DELETE routes - Protected (chỉ admin)
+router.post('/', verifyToken, requireAdmin, categoryController.createCategory);
+router.put('/:id', verifyToken, requireAdmin, categoryController.updateCategory);
+router.delete('/:id', verifyToken, requireAdmin, categoryController.deleteCategory);
 
 module.exports = router;

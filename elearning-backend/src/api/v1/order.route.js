@@ -9,10 +9,13 @@ router.use(authMiddleware.verifyToken);
 // GET /api/v1/orders - Lấy lịch sử đơn hàng của người dùng
 router.get('/', orderController.getUserOrders);
 
-// GET /api/v1/orders/:orderId - Lấy chi tiết một đơn hàng cụ thể
-router.get('/:orderId', orderController.getOrderDetails); // <-- THÊM ROUTE NÀY
-
 // POST /api/v1/orders/checkout - Tạo đơn hàng từ giỏ hàng
 router.post('/checkout', orderController.createOrder);
+
+// POST /api/v1/orders/:orderId/cancel - Hủy đơn hàng (phải đặt trước route :orderId)
+router.post('/:orderId/cancel', orderController.cancelOrder);
+
+// GET /api/v1/orders/:orderId - Lấy chi tiết một đơn hàng cụ thể
+router.get('/:orderId', orderController.getOrderDetails);
 
 module.exports = router;
