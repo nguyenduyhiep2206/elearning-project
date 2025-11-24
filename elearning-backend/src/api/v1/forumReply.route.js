@@ -1,14 +1,10 @@
-// api/routes/forumReply.routes.js
-
 const express = require('express');
 const router = express.Router();
-const replyController = require('../../controllers/forumReply.controller');
-// const authMiddleware = require('../../middlewares/auth');
+const controller = require('../../controllers/forum.controller');
+const auth = require('../../middlewares/auth.middleware');
 
-// router.post('/', authMiddleware, replyController.createReply);
-router.post('/', replyController.createReply); // Tạm thời
-
-// router.delete('/:id', authMiddleware, replyController.deleteReply);
-router.delete('/:id', replyController.deleteReply); // Tạm thời
+router.use(auth.verifyToken);
+router.post('/', controller.createReply);
+router.delete('/:id', controller.deleteReply);
 
 module.exports = router;

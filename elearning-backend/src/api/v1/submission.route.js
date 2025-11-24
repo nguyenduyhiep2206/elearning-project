@@ -1,18 +1,16 @@
-// api/routes/submission.routes.js
-
 const express = require('express');
 const router = express.Router();
-const submissionController = require('../../controllers/submission.controller');
-// const authStudent = require('../../middlewares/authStudent');
-// const authTeacher = require('../../middlewares/authTeacher');
+const controller = require('../../controllers/submission.controller');
+const auth = require('../../middlewares/auth.middleware');
+const role = require('../../middlewares/role.middleware');
 
-// router.post('/', authStudent, submissionController.submitAssignment);
-router.post('/', submissionController.submitAssignment); // Tạm thời
+router.use(auth.verifyToken);
 
-// router.get('/assignment/:assignmentId', authStudent, submissionController.getSubmission);
-router.get('/assignment/:assignmentId', submissionController.getSubmission); // Tạm thời
+// Học viên nộp bài
+router.post('/', controller.submitAssignment);
 
-// router.put('/grade/:submissionId', authTeacher, submissionController.gradeSubmission);
-router.put('/grade/:submissionId', submissionController.gradeSubmission); // Tạm thời
+// Giáo viên xem danh sách nộp và chấm điểm
+router.get('/assignment/:assignmentId', role.isInstructor, controller.getSubmissionsByAssignment);
+router.put('/:id/grade', role.isInstructor, controller.gradeSubmission);
 
 module.exports = router;

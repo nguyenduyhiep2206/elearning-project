@@ -1,55 +1,45 @@
-// controllers/submission.controller.js
-
-const submissionService = require('../services/submission.service');
-
-const handleError = (res, error) => {
-  console.error(error);
-  return res.status(500).json({ message: error.message });
-};
-
-// Học viên xem bài nộp của mình
-exports.getSubmission = async (req, res) => {
-  try {
-    // const studentId = req.user.id;
-    const { assignmentId } = req.params;
-    
-    // Tạm thời
-    const { studentId } = req.query; // /submission/assignment/123?studentId=1
-    
-    const submission = await submissionService.getSubmission(studentId, assignmentId);
-    if (!submission) {
-      return res.status(404).json({ message: 'No submission found' });
-    }
-    res.status(200).json(submission);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
+// src/controllers/submission.controller.js
+const assignmentService = require('../services/assignment.service');
 
 // Học viên nộp bài
 exports.submitAssignment = async (req, res) => {
-  try {
-    // const studentId = req.user.id;
-    // const { assignmentId, fileurl } = req.body;
-    // const submission = await submissionService.submitAssignment({ studentid: studentId, assignmentid, fileurl });
-    
-    // Tạm thời
-    const submission = await submissionService.submitAssignment(req.body); // { studentid, assignmentid, fileurl }
-    
-    res.status(201).json(submission);
-  } catch (error) {
-    handleError(res, error);
-  }
+    try {
+        const studentId = req.user.userid;
+        const { assignmentId, fileUrl } = req.body;
+        
+        const result = await assignmentService.submitAssignment({
+            assignmentid: assignmentId,
+            studentid: studentId,
+            fileurl: fileUrl
+        });
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-// Giảng viên chấm điểm
+// Giáo viên chấm điểm
 exports.gradeSubmission = async (req, res) => {
-  try {
-    const { submissionId } = req.params;
-    const { grade, feedback } = req.body;
-    const gradedSubmission = await submissionService.gradeSubmission(submissionId, grade, feedback);
-    res.status(200).json(gradedSubmission);
-  } catch (error) {
-    handleError(res, error);
-  }
+    try {
+        const teacherId = req.user.userid;
+        const { grade, feedback } = req.body;
+        const submissionId = req.params.id;
+
+        const result = await assignmentService.gradeSubmission(submissionId, grade, feedback, teacherId);
+        res.status(200).json(result);
+    } catch (error) {
+        if (error.message === 'Permission denied') return res.status(403).json({ message: error.message });
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Giáo viên lấy danh sách bài nộp
+exports.getSubmissionsByAssignment = async (req, res) => {
+    try {
+        const teacherId = req.user.userid;
+        const list = await assignmentService.getSubmissionsByAssignment(req.params.assignmentId, teacherId);
+        res.status(200).json(list);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };

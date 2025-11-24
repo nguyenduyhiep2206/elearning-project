@@ -1,56 +1,21 @@
-// controllers/assignment.controller.js
-
+// src/controllers/assignment.controller.js
 const assignmentService = require('../services/assignment.service');
 
-const handleError = (res, error) => {
-  console.error(error);
-  return res.status(500).json({ message: error.message });
+exports.createAssignment = async (req, res) => {
+    try {
+        const teacherId = req.user.userid;
+        const newAssign = await assignmentService.createAssignment(req.body, teacherId);
+        res.status(201).json(newAssign);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 exports.getAssignmentsByCourse = async (req, res) => {
-  try {
-    const allAssignments = await assignmentService.getAssignmentsByCourse(req.params.courseId);
-    res.status(200).json(allAssignments);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
-
-exports.getAssignmentById = async (req, res) => {
-  try {
-    const assignment = await assignmentService.getAssignmentById(req.params.id);
-    if (!assignment) {
-      return res.status(404).json({ message: 'Assignment not found' });
+    try {
+        const list = await assignmentService.getAssignmentsByCourse(req.params.courseId);
+        res.status(200).json(list);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-    res.status(200).json(assignment);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
-
-exports.createAssignment = async (req, res) => {
-  try {
-    const newAssignment = await assignmentService.createAssignment(req.body);
-    res.status(201).json(newAssignment);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
-
-exports.updateAssignment = async (req, res) => {
-  try {
-    const updatedAssignment = await assignmentService.updateAssignment(req.params.id, req.body);
-    res.status(200).json(updatedAssignment);
-  } catch (error) {
-    handleError(res, error);
-  }
-};
-
-exports.deleteAssignment = async (req, res) => {
-  try {
-    await assignmentService.deleteAssignment(req.params.id);
-    res.status(204).send();
-  } catch (error) {
-    handleError(res, error);
-  }
 };

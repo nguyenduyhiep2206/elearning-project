@@ -1,13 +1,12 @@
-// api/routes/forumDiscussion.routes.js
-
 const express = require('express');
 const router = express.Router();
-const discussionController = require('../../controllers/forumDiscussion.controller');
-// const authMiddleware = require('../../middlewares/auth');
+const controller = require('../../controllers/forum.controller');
+const auth = require('../../middlewares/auth.middleware');
 
-router.get('/course/:courseId', discussionController.getDiscussionsByCourse);
-router.get('/:id', discussionController.getDiscussionById);
-// router.post('/', authMiddleware, discussionController.createDiscussion);
-router.post('/', discussionController.createDiscussion); // Tạm thời
+router.get('/course/:courseId', controller.getDiscussionsByCourse);
+router.get('/:id', controller.getDiscussionById);
+
+router.use(auth.verifyToken);
+router.post('/', controller.createDiscussion);
 
 module.exports = router;
