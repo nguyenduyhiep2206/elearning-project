@@ -48,7 +48,6 @@ const login = async (email, password) => {
             { where: { userid: user.userid } }
         );
 
-        // 8. Trả về thông tin người dùng (bỏ mật khẩu) và token
         return {
             user: {
                 id: user.userid,
@@ -192,8 +191,76 @@ const register = async (fullName, email, password) => {
     }
 };
 
+
+
+const loginWithGoogle = async (googleProfile) => {
+  const email = googleProfile.emails?.[0]?.value;
+
+  if (!email) throw new Error("Google không trả về email");
+
+  let user = await users.findOne({
+    where: { email: email.toLowerCase().trim() },
+  });
+
+  if (!user) {
+    user = await users.create({
+      fullname: googleProfile.displayName,
+      email: email.toLowerCase().trim(),
+      passwordhash: null,
+      role: "Student",
+      provider: "google",
+      googleid: googleProfile.id,
+      isactive: true,
+      profilepicture: googleProfile.photos?.[0]?.value || null,
+      createdat: new Date(),
+      lastlogin: new Date(),
+    });
+
+    return { isNew: true, user };
+  }
+
+  if (user.provider === "local") {
+    throw new Error(
+      "Email này đã được đăng ký bằng mật khẩu. Hãy dùng đăng nhập truyền thống."
+    );
+  }
+
+  await user.update({
+    lastlogin: new Date(),
+    profilepicture: googleProfile.photos?.[0]?.value || user.profilepicture,
+  });
+
+  const token = jwt.sign(
+    {
+      userId: user.userid,
+      email: user.email,
+      role: user.role,
+      iat: Math.floor(Date.now() / 1000),
+    },
+    process.env.JWT_SECRET || "fallback-secret-key-for-development",
+    {
+      expiresIn: "1h",
+      issuer: "elearning-app",
+      audience: "elearning-users",
+    }
+  );
+
+  return {
+    isNew: false,
+    token,
+    user: {
+      id: user.userid,
+      fullName: user.fullname,
+      email: user.email,
+      role: user.role,
+      profilepicture: user.profilepicture,
+    },
+  };
+};
+
+
 module.exports = {
     login,
     register,
-    verifyToken
+    verifyToken,loginWithGoogle
 };

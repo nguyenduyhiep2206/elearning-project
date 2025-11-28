@@ -1,23 +1,14 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const messageController = require('../../controllers/message.controller');
-const { verifyToken } = require('../../middlewares/auth.middleware'); 
-const authorizeRole = require('../../middlewares/role.middleware');
+const messageController = require("../../controllers/message.controller");
+const { verifyToken } = require('../../middlewares/auth.middleware');
 
-// Gửi tin nhắn
-router.post(
-  '/',
-  verifyToken,
-  authorizeRole(['Student', 'Teacher', 'Admin']),
-  messageController.sendMessage
-);
+router.post("/", verifyToken, messageController.sendMessage);
 
-// Lịch sử chat giữa 2 user
-router.get(
-  '/chat/:otherUserId',
-  verifyToken,
-  authorizeRole(['Student', 'Teacher', 'Admin']),
-  messageController.getChatHistory
-);
+router.get("/:userId", verifyToken, messageController.getMessages);
+
+router.get("/", verifyToken, messageController.getChatUsers);
+
+router.post("/seen", verifyToken, messageController.markMessagesAsSeen);
 
 module.exports = router;

@@ -31,7 +31,7 @@ const login = async (req, res, next) => {
                 name: user.fullName,
                 email: user.email,
                 role: user.role,
-            },
+            }, 
         });
     } catch (error) {
         console.error('Login controller error:', error.message);
@@ -132,24 +132,31 @@ const verifyAuth = async (req, res, next) => {
     }
 };
 
+
 const googleCallback = async (req, res) => {
-    try {
-        const user = req.user;
+  try {
+    const googleProfile = req.user; 
+    const result = await authService.loginWithGoogle(googleProfile);
 
-        // Tạo JWT
-        const token = jwt.sign(
-            { id: user._id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        // Redirect về frontend kèm token
-        res.redirect(`${process.env.FRONTEND_URL}/login-success?token=${token}`);
-    } catch (error) {
-        console.error('Google callback error:', error.message);
-        res.redirect(`${process.env.FRONTEND_URL}/login-failed`);
+    if (result.isNew) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?registered=1`
+      );
     }
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/login?token=${result.token}&role=${result.user.role}}`
+    );
+  } catch (err) {
+    console.error("Google Login Error:", err);
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(
+        err.message
+      )}`
+    );
+  }
 };
+
 
 // const facebookCallback = async (req, res) => {
 //     try {

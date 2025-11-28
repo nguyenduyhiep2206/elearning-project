@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
             type: AuthActionTypes.LOGIN_SUCCESS,
             payload: { user: res.data.user, token },
           });
-        } catch (error) {
+        } catch  {
           console.warn('❌ Token hết hạn, đăng xuất.');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -135,3 +135,4 @@ export const useAuth = () => {
   if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
+

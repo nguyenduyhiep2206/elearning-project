@@ -1,8 +1,9 @@
-FROM node:20
+FROM node:20-alpine
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
 COPY package*.json ./
-RUN npm cache clean --force
-RUN npm install --force
+RUN npm install --production && npm cache clean --force
 
 COPY . .
 EXPOSE 5173

@@ -1,187 +1,322 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { courseService } from '../services';
 
 const DashboardPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  // State cho carousel
+  const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [activeFilter, setActiveFilter] = useState('All Recommendation');
+
+  // Dữ liệu carousel slides
+  const slides = [
+    {
+      headline: 'Learn something new everyday.',
+      subheadline: 'Become professionals and ready to join the world.',
+      cta: 'Explore Photography',
+      bgColor: 'bg-teal-500',
+      image: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500&h=400&fit=crop',
+      instructor: {
+        name: 'Jessica Wang | Photographer',
+        award: 'Winner Photo 2017 Awards | Joined Klevr since 2006'
+      }
+    },
+    {
+      headline: 'Master Web Development',
+      subheadline: 'Build stunning websites and applications with modern tools.',
+      cta: 'Start Learning',
+      bgColor: 'bg-purple-500',
+      image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=400&fit=crop',
+      instructor: {
+        name: 'John Smith | Developer',
+        award: 'Senior Full Stack Developer | 10+ years experience'
+      }
+    },
+    {
+      headline: 'Design Your Future',
+      subheadline: 'Create beautiful designs that users will love.',
+      cta: 'Explore Design',
+      bgColor: 'bg-blue-500',
+      image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=400&fit=crop',
+      instructor: {
+        name: 'Sarah Johnson | Designer',
+        award: 'Award-winning UI/UX Designer | Creative Director'
+      }
+    }
+  ];
+
+  // Dữ liệu filters
+  const filters = [
+    'All Recommendation',
+    'Adobe Illustrator',
+    'Adobe Photoshop',
+    'UI Design',
+    'Web Programming',
+    'Mobile Programming',
+    'Backend Development',
+    'Vue JS'
+  ];
+
+  // State dữ liệu từ backend
   const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [trendingCourses, setTrendingCourses] = useState([]);
+  const [instructors, setInstructors] = useState([]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchCourses();
-    }
-  }, [isAuthenticated]);
+    const loadData = async () => {
+      try {
+        const [popularRes, latestRes] = await Promise.all([
+          courseService.getPopularCourses(8),
+          courseService.getLatestCourses(8)
+        ]);
 
-  const fetchCourses = async () => {
-    try {
-      // This would be replaced with actual API call
-      // const response = await courseService.getAllCourses();
-      // setCourses(response.data);
-      
-      // Mock data
-      setCourses([
-        {
-          id: 1,
-          title: 'React cơ bản',
-          description: 'Học React từ đầu',
-          instructor: 'Nguyễn Văn A',
-          price: 299000,
-          rating: 4.5,
-          students: 1200,
-        },
-        {
-          id: 2,
-          title: 'JavaScript nâng cao',
-          description: 'Nâng cao kỹ năng JavaScript',
-          instructor: 'Trần Thị B',
-          price: 399000,
-          rating: 4.8,
-          students: 800,
-        },
-      ]);
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-    } finally {
-      setLoading(false);
-    }
+        const popularPayload = popularRes.data?.data || popularRes.data || [];
+        const latestPayload = latestRes.data?.data || latestRes.data || [];
+
+        const normalizeCourse = (c) => ({
+          id: c.courseid ?? c.id,
+          title: c.coursename ?? c.title,
+          instructor: c.teacher?.fullname || 'Unknown Instructor',
+          price: c.price != null ? `$${Number(c.price).toFixed(2)}` : '$0.00',
+          originalPrice: c.price != null ? `$${(Number(c.price) * 1.2).toFixed(2)}` : '',
+          image: c.imageurl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop&crop=face',
+          tag: 'Best Seller',
+          rating: 5,
+          reviews: 0,
+        });
+
+        const popular = (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || []).map(normalizeCourse);
+        const latest = (Array.isArray(latestPayload) ? latestPayload : latestPayload?.courses || []).map(normalizeCourse);
+
+        setCourses(popular);
+        setTrendingCourses(latest);
+
+        // Suy ra instructors từ danh sách khóa học phổ biến
+        const teacherMap = new Map();
+        for (const c of (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || [])) {
+          const id = c.teacher?.userid;
+          const name = c.teacher?.fullname;
+          if (id && name && !teacherMap.has(id)) {
+            teacherMap.set(id, {
+              id,
+              name,
+              profession: 'Instructor',
+              image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face'
+            });
+          }
+        }
+        setInstructors(Array.from(teacherMap.values()).slice(0, 8));
+      } catch (e) {
+        setCourses([]);
+        setTrendingCourses([]);
+        setInstructors([]);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Functions
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Vui lòng đăng nhập để truy cập Dashboard
-          </h2>
-          <a
-            href="/login"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-          >
-            Đăng nhập
-          </a>
-        </div>
-      </div>
-    );
-  }
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Chào mừng trở lại, {user?.name || user?.email}!
-          </h1>
-          <p className="text-gray-600">
-            Đây là tổng quan về tiến trình học tập của bạn
-          </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Khóa học đã đăng ký</p>
-                <p className="text-2xl font-semibold text-gray-900">5</p>
+      <div className="relative h-[450px] rounded-2xl overflow-hidden max-w-7xl mx-auto shadow-2xl">
+        {slides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 flex items-center justify-between p-10 transition-opacity duration-700 ${slide.bgColor} ${
+              currentSlide === index ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <div className="flex-1 text-white z-10">
+              <h1 className="text-5xl font-bold mb-5 leading-tight">
+                {slide.headline}
+              </h1>
+              <p className="text-lg mb-8 opacity-90">
+                {slide.subheadline}
+              </p>
+              <button className="px-8 py-4 bg-white text-teal-500 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300">
+                {slide.cta}
+              </button>
+            </div>
+            <div className="flex-1 h-full relative flex items-end p-10">
+              <img 
+                src={slide.image} 
+                alt={slide.headline} 
+                className="absolute inset-0 w-full h-full object-cover" 
+              />
+              <div className="bg-black bg-opacity-70 p-5 rounded-lg text-white z-10">
+                <div className="text-lg font-bold mb-1">{slide.instructor.name}</div>
+                <div className="text-sm opacity-80">{slide.instructor.award}</div>
               </div>
             </div>
           </div>
+        ))}
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Khóa học đã hoàn thành</p>
-                <p className="text-2xl font-semibold text-gray-900">2</p>
-              </div>
-            </div>
-          </div>
+        <button
+          onClick={prevSlide}
+          className="absolute left-5 top-1/2 -translate-y-1/2 z-20 bg-white bg-opacity-80 hover:bg-white rounded-full p-2 transition-all duration-300"
+        >
+          <i className="fas fa-chevron-left text-gray-800 text-lg"></i>
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-5 top-1/2 -translate-y-1/2 z-20 bg-white bg-opacity-80 hover:bg-white rounded-full p-2 transition-all duration-300"
+        >
+          <i className="fas fa-chevron-right text-gray-800 text-lg"></i>
+        </button>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-yellow-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Giờ học</p>
-                <p className="text-2xl font-semibold text-gray-900">45h</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Chứng chỉ</p>
-                <p className="text-2xl font-semibold text-gray-900">3</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Courses */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Khóa học gần đây</h2>
-          </div>
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-2 text-gray-600">Đang tải...</p>
-              </div>
-            ) : courses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {courses.map((course) => (
-                  <div key={course.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3">{course.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-blue-600 font-semibold">
-                        {course.price.toLocaleString('vi-VN')} VNĐ
-                      </span>
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="text-sm text-gray-600">{course.rating}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-600">Chưa có khóa học nào</p>
-                <a
-                  href="/courses"
-                  className="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Khám phá khóa học
-                </a>
-              </div>
-            )}
-          </div>
+        {/* Slide Indicators */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                currentSlide === index ? 'bg-white' : 'bg-white bg-opacity-50'
+              }`  }
+            />
+          ))}
         </div>
       </div>
+
+      {/* Category Filters */}
+      <div className="py-10 px-5 bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto flex gap-4 justify-center flex-wrap">
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                activeFilter === filter
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* More from Kitani Studio Section */}
+      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">More from Kitani Studio</h2>
+        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {courses.map((course) => (
+            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+              <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
+              <div className="p-5">
+                <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
+                  {course.tag}
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
+                <p className="text-gray-600 mb-2">by {course.instructor}</p>
+                <div className="flex items-center gap-1 mb-4">
+                  <div className="flex text-yellow-400">
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                  </div>
+                  <span className="text-gray-600 text-sm">({course.reviews})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-gray-900">{course.price}</span>
+                  <span className="text-gray-500 line-through">{course.originalPrice}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Trending Course Section */}
+      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">Trending Course</h2>
+        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {trendingCourses.map((course) => (
+            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+              <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
+              <div className="p-5">
+                <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
+                  {course.tag}
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
+                <p className="text-gray-600 mb-2">by {course.instructor}</p>
+                <div className="flex items-center gap-1 mb-4">
+                  <div className="flex text-yellow-400">
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                    <i className="fas fa-star"></i>
+                  </div>
+                  <span className="text-gray-600 text-sm">({course.reviews})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-gray-900">{course.price}</span>
+                  <span className="text-gray-500 line-through">{course.originalPrice}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Popular Instructor Section */}
+      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">Popular Instructor</h2>
+        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {instructors.map((instructor) => (
+            <div key={instructor.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+              <img src={instructor.image} alt={instructor.name} className="w-full h-48 object-cover" />
+              <div className="p-5 text-center">
+                <h3 className="text-lg font-bold mb-1 text-gray-900">{instructor.name}</h3>
+                <p className="text-gray-600">{instructor.profession}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-gradient-to-br from-blue-600 to-blue-500 py-20 px-5 text-center text-white relative overflow-hidden mt-4">
+        <div className="absolute right-0 top-0 w-80 h-full opacity-30" 
+             style={{
+               backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
+             }}>
+        </div>
+        <h2 className="text-4xl font-bold mb-5">Join and get amazing discount.</h2>
+        <p className="text-lg mb-10 opacity-90">
+          With our responsive themes and mobile and desktop apps.
+        </p>
+        <div className="flex justify-center gap-4 max-w-md mx-auto">
+          <input 
+            type="email" 
+            placeholder="Email Address" 
+            className="flex-1 px-5 py-4 rounded-full border-none text-gray-900 outline-none"
+          />
+          <button className="px-8 py-4 bg-teal-500 text-white rounded-full font-semibold hover:bg-teal-600 transition-all duration-300">
+            Subscribe
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 };

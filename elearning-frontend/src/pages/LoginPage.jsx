@@ -1,10 +1,59 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate ,useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AuthService from '../services/auth.service';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, error, loading, clearError } = useAuth();
+  const { login, error, loading, clearError, isAuthenticated, user } = useAuth();
+const [query] = useSearchParams();
+
+  useEffect(() => {
+  const token = query.get("token");
+  const justRegistered = query.get("registered") === "1";
+
+  if (justRegistered) {
+    alert("Đăng ký Google thành công, hãy đăng nhập!");
+  }
+
+  if (token) {
+    localStorage.setItem("token", token);
+
+    const fetchUser = async () => {
+      try {
+        const response = await AuthService.getCurrentUser(token); 
+        const userObj = response.data;
+
+        localStorage.setItem("user", JSON.stringify(userObj));
+
+        const role = userObj.role?.toLowerCase();
+        if (role === "admin") navigate("/admin");
+        else if (role === "teacher") navigate("/teacher");
+        else navigate("/");
+      } catch (err) {
+        console.error("Lấy thông tin user thất bại:", err);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+    };
+
+    fetchUser();
+  }
+}, [query, navigate]);
+
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const userRole = user.role?.toLowerCase();
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState(''); 
@@ -23,14 +72,25 @@ const LoginPage = () => {
 
     try {
       console.log('📤 Gửi request đăng nhập...');
-      await login({ email, password });
+      const response = await login({ email, password });
       
       console.log('✅ Đăng nhập thành công!');
-      navigate('/dashboard');
+      
+      const userRole = response?.user?.role?.toLowerCase();
+      if (userRole === 'admin') {
+        navigate('/admin');
+      } else if (userRole === 'teacher') {
+        navigate('/teacher');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       console.log('❌ Đăng nhập thất bại:', error.message);
     }
   };
+     const googleLoginUrl = `${import.meta.env.VITE_API_URL}/auth/google?mode=login`;
+
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -134,7 +194,10 @@ const LoginPage = () => {
             </div>
 
             <div className="space-y-3">
-              <button
+                            <a href={googleLoginUrl}>
+
+              <button  
+
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -144,8 +207,7 @@ const LoginPage = () => {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
                 Tiếp tục với Google
-              </button>
-
+              </button></a>
               <button
                 className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >

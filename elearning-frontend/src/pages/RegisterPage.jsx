@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
+//import { useAuth } from '../context/AuthContext.jsx';
+import AuthService from '../services/auth.service';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,7 @@ const RegisterPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  //const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -40,25 +41,24 @@ const RegisterPage = () => {
     }
 
     try {
-
-      await login({
+      await AuthService.register({
+        name: formData.name,
         email: formData.email,
         password: formData.password,
       });
 
-      navigate('/dashboard');
-    } catch (error) {
-      setError(error.response?.data?.message || 'Đăng ký thất bại');
+      navigate('/login?registered=1');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Đăng ký thất bại');
     } finally {
       setLoading(false);
     }
   };
 
-  const loginWithGoogle = () => {
-          navigate('/login');
+  const registerWithGoogle = () => {
 
-};
-
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google?mode=register`;
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -181,10 +181,11 @@ const RegisterPage = () => {
               {loading ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
             </button>
           </div>
+
           <div>
             <button
               type="button"
-              onClick={loginWithGoogle}
+              onClick={registerWithGoogle}
               className="mt-3 group relative w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100"
             >
               <img
@@ -195,7 +196,6 @@ const RegisterPage = () => {
               Đăng ký bằng Google
             </button>
           </div>
-
         </form>
       </div>
     </div>

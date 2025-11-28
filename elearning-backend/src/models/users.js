@@ -18,7 +18,7 @@ module.exports = function (sequelize, DataTypes) {
     },
     passwordhash: {
       type: DataTypes.STRING(255),
-      allowNull: false
+      allowNull: true
     },
     role: {
       type: DataTypes.ENUM('student', 'teacher', 'admin'),
@@ -27,6 +27,14 @@ module.exports = function (sequelize, DataTypes) {
     },
 
     profilepicture: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    googleid:{
+      type: DataTypes.STRING(20),
+      allowNull: true
+    },
+    provider:{
       type: DataTypes.STRING(255),
       allowNull: true
     },

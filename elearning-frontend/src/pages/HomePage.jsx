@@ -1,181 +1,133 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { courseService, categoryService } from '../services';
+import UserChatModal from './ChatBox'
 
 const HomePage = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+
+useEffect(() => {
+  const stored = JSON.parse(localStorage.getItem("user")) || {};
+  setCurrentUser(stored.user || null);
+}, []);
+
   // State cho carousel
+  const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [activeFilter, setActiveFilter] = useState('All Recommendation');
+  const [activeFilter, setActiveFilter] = useState('Tất cả');
+  const categoryScrollRef = useRef(null);
+
+  // Fetch categories từ API
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: categoryService.getAllCategories,
+  });
 
   // Dữ liệu carousel slides
   const slides = [
     {
-      headline: 'Learn something new everyday.',
-      subheadline: 'Become professionals and ready to join the world.',
-      cta: 'Explore Photography',
+      headline: 'Học điều mới mỗi ngày.',
+      subheadline: 'Trở thành chuyên gia và sẵn sàng tham gia thế giới.',
+      cta: 'Khám phá Nhiếp ảnh',
       bgColor: 'bg-teal-500',
       image: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500&h=400&fit=crop',
       instructor: {
-        name: 'Jessica Wang | Photographer',
-        award: 'Winner Photo 2017 Awards | Joined Klevr since 2006'
+        name: 'Jessica Wang | Nhiếp ảnh gia',
+        award: 'Giải thưởng Ảnh 2017 | Tham gia từ năm 2006'
       }
     },
     {
-      headline: 'Master Web Development',
-      subheadline: 'Build stunning websites and applications with modern tools.',
-      cta: 'Start Learning',
+      headline: 'Thành thạo Phát triển Web',
+      subheadline: 'Xây dựng website và ứng dụng tuyệt đẹp với công cụ hiện đại.',
+      cta: 'Bắt đầu Học',
       bgColor: 'bg-purple-500',
       image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=400&fit=crop',
       instructor: {
-        name: 'John Smith | Developer',
-        award: 'Senior Full Stack Developer | 10+ years experience'
+        name: 'John Smith | Lập trình viên',
+        award: 'Full Stack Developer cao cấp | Hơn 10 năm kinh nghiệm'
       }
     },
     {
-      headline: 'Design Your Future',
-      subheadline: 'Create beautiful designs that users will love.',
-      cta: 'Explore Design',
+      headline: 'Thiết kế Tương lai của Bạn',
+      subheadline: 'Tạo ra những thiết kế đẹp mắt mà người dùng sẽ yêu thích.',
+      cta: 'Khám phá Thiết kế',
       bgColor: 'bg-blue-500',
       image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=400&fit=crop',
       instructor: {
-        name: 'Sarah Johnson | Designer',
-        award: 'Award-winning UI/UX Designer | Creative Director'
+        name: 'Sarah Johnson | Nhà thiết kế',
+        award: 'UI/UX Designer đoạt giải | Giám đốc Sáng tạo'
       }
     }
   ];
 
-  // Dữ liệu filters
-  const filters = [
-    'All Recommendation',
-    'Adobe Illustrator',
-    'Adobe Photoshop',
-    'UI Design',
-    'Web Programming',
-    'Mobile Programming',
-    'Backend Development',
-    'Vue JS'
+  // Xử lý categories data
+  const categories = categoriesData?.data?.data || categoriesData?.data || [];
+  const allCategories = [
+    { id: 'all', name: 'Tất cả' },
+    ...categories.map(cat => ({
+      id: cat.categoryid || cat.id,
+      name: cat.categoryname || cat.name
+    }))
   ];
 
-  // Dữ liệu khóa học
-  const courses = [
-    {
-      id: 1,
-      title: 'VUE JAVASCRIPT COURSE',
-      instructor: 'Kitani Studio',
-      price: '$24.92',
-      originalPrice: '$32.90',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop&crop=face',
-      tag: 'Best Seller',
-      rating: 5,
-      reviews: 1200
-    },
-    {
-      id: 2,
-      title: 'UI DESIGN FOR BEGINNERS',
-      instructor: 'Kitani Studio',
-      price: '$19.99',
-      originalPrice: '$29.99',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=200&fit=crop&crop=face',
-      tag: 'Best Seller',
-      rating: 5,
-      reviews: 856
-    },
-    {
-      id: 3,
-      title: 'MOBILE DEV REACT NATIVE',
-      instructor: 'Kitani Studio',
-      price: '$34.50',
-      originalPrice: '$45.00',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face',
-      tag: 'Best Seller',
-      rating: 5,
-      reviews: 934
-    },
-    {
-      id: 4,
-      title: 'WEBSITE DEV ZERO TO HERO',
-      instructor: 'Kitani Studio',
-      price: '$28.75',
-      originalPrice: '$39.99',
-      image: 'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=300&h=200&fit=crop&crop=face',
-      tag: 'Best Seller',
-      rating: 5,
-      reviews: 1100
-    }
-  ];
+  // State dữ liệu từ backend
+  const [courses, setCourses] = useState([]);
+  const [trendingCourses, setTrendingCourses] = useState([]);
+  const [instructors, setInstructors] = useState([]);
 
-  const trendingCourses = [
-    {
-      id: 5,
-      title: 'DEVELOPMENT BOOTCAMP',
-      instructor: 'Tech Academy',
-      price: '$199.99',
-      originalPrice: '$299.99',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=300&h=200&fit=crop&crop=face',
-      tag: '20% OFF',
-      rating: 5,
-      reviews: 856
-    },
-    {
-      id: 6,
-      title: 'IOS 13 SWIFT 5 IOS DEVELOPMEN',
-      instructor: 'Apple Dev',
-      price: '$89.99',
-      originalPrice: '$129.99',
-      image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&h=200&fit=crop&crop=face',
-      tag: '20% OFF',
-      rating: 5,
-      reviews: 623
-    },
-    {
-      id: 7,
-      title: 'LEARN PROGRAMI IN 30 DAYS',
-      instructor: 'Code Master',
-      price: '$49.99',
-      originalPrice: '$79.99',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=200&fit=crop&crop=face',
-      tag: '20% OFF',
-      rating: 5,
-      reviews: 445
-    },
-    {
-      id: 8,
-      title: 'MAKE UBER CLONE APP',
-      instructor: 'App Builder',
-      price: '$149.99',
-      originalPrice: '$199.99',
-      image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=300&h=200&fit=crop&crop=face',
-      tag: '20% OFF',
-      rating: 5,
-      reviews: 789
-    }
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [popularRes, latestRes] = await Promise.all([
+          courseService.getPopularCourses(8),
+          courseService.getLatestCourses(8)
+        ]);
 
-  const instructors = [
-    {
-      id: 1,
-      name: 'Alexander Bastian',
-      profession: 'Expert Mobile Engineer',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop&crop=face'
-    },
-    {
-      id: 2,
-      name: 'Labie Carthaline',
-      profession: 'UI/UX Designer',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=200&fit=crop&crop=face'
-    },
-    {
-      id: 3,
-      name: 'Jonathan Doe',
-      profession: 'Full Stack Developer',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=200&fit=crop&crop=face'
-    },
-    {
-      id: 4,
-      name: 'Kitani Sarasvati',
-      profession: 'Data Scientist',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face'
-    }
-  ];
+        const popularPayload = popularRes.data?.data || popularRes.data || [];
+        const latestPayload = latestRes.data?.data || latestRes.data || [];
+
+        const normalizeCourse = (c) => ({
+          id: c.courseid ?? c.id,
+          title: c.coursename ?? c.title,
+          instructor: c.teacher?.fullname || 'Giảng viên chưa xác định',
+          price: c.price != null ? `${Number(c.price).toLocaleString('vi-VN')}đ` : '0đ',
+          originalPrice: c.price != null ? `${(Number(c.price) * 1.2).toLocaleString('vi-VN')}đ` : '',
+          image: c.imageurl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop&crop=face',
+          tag: 'Bán chạy nhất',
+          rating: 5,
+          reviews: 0,
+        });
+
+        const popular = (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || []).map(normalizeCourse);
+        const latest = (Array.isArray(latestPayload) ? latestPayload : latestPayload?.courses || []).map(normalizeCourse);
+
+        setCourses(popular);
+        setTrendingCourses(latest);
+
+        // Suy ra instructors từ danh sách khóa học phổ biến
+        const teacherMap = new Map();
+        for (const c of (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || [])) {
+          const id = c.teacher?.userid;
+          const name = c.teacher?.fullname;
+          if (id && name && !teacherMap.has(id)) {
+            teacherMap.set(id, {
+              id,
+              name,
+              profession: 'Giảng viên',
+              image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face'
+            });
+          }
+        }
+        setInstructors(Array.from(teacherMap.values()).slice(0, 8));
+      } catch (e) {
+        setCourses([]);
+        setTrendingCourses([]);
+        setInstructors([]);
+      }
+    };
+    loadData();
+  }, []);
 
   // Functions
   const nextSlide = () => {
@@ -188,6 +140,18 @@ const HomePage = () => {
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
+  };
+
+  // Functions cho category scroll
+  const scrollCategories = (direction) => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = 300; // Số pixel scroll mỗi lần
+      const newScrollLeft = categoryScrollRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
+      categoryScrollRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
@@ -256,37 +220,69 @@ const HomePage = () => {
 
       {/* Category Filters */}
       <div className="py-10 px-5 bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto flex gap-4 justify-center flex-wrap">
-          {filters.map((filter) => (
+        <div className="max-w-6xl mx-auto relative">
+          {/* Left Scroll Button */}
+          <button
+            onClick={() => scrollCategories('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full p-2 shadow-md hover:bg-gray-50 transition-all duration-300"
+            aria-label="Scroll left"
+          >
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Right Scroll Button */}
+          <button
+            onClick={() => scrollCategories('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-300 rounded-full p-2 shadow-md hover:bg-gray-50 transition-all duration-300"
+            aria-label="Scroll right"
+          >
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          
+          {/* Scrollable Category List */}
+          <div
+            ref={categoryScrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide px-10"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+          >
+            {allCategories.map((category) => (
             <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeFilter === filter
+              key={category.id}
+                onClick={() => setActiveFilter(category.id === 'all' ? 'Tất cả' : category.name)}
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
+                  activeFilter === (category.id === 'all' ? 'Tất cả' : category.name)
                   ? 'bg-teal-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {filter}
+              {category.name}
             </button>
           ))}
+          </div>
         </div>
       </div>
 
       {/* More from Kitani Studio Section */}
       <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">More from Kitani Studio</h2>
-        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">Khóa học nổi bật</h2>
+        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {courses.map((course) => (
-            <div key={course.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
               <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
               <div className="p-5">
                 <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
                   {course.tag}
                 </div>
                 <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
-                <p className="text-gray-600 mb-2">by {course.instructor}</p>
+                <p className="text-gray-600 mb-2">bởi {course.instructor}</p>
                 <div className="flex items-center gap-1 mb-4">
                   <div className="flex text-yellow-400">
                     <i className="fas fa-star"></i>
@@ -309,18 +305,18 @@ const HomePage = () => {
 
       {/* Trending Course Section */}
       <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">Trending Course</h2>
-        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">Khóa học đang thịnh hành</h2>
+        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {trendingCourses.map((course) => (
-            <div key={course.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
               <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
               <div className="p-5">
                 <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
                   {course.tag}
                 </div>
                 <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
-                <p className="text-gray-600 mb-2">by {course.instructor}</p>
+                <p className="text-gray-600 mb-2">bởi {course.instructor}</p>
                 <div className="flex items-center gap-1 mb-4">
                   <div className="flex text-yellow-400">
                     <i className="fas fa-star"></i>
@@ -343,8 +339,8 @@ const HomePage = () => {
 
       {/* Popular Instructor Section */}
       <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">Popular Instructor</h2>
-        <p className="text-gray-600 mb-10">We know the best things for You. Top picks for You.</p>
+        <h2 className="text-4xl font-bold mb-3 text-gray-900">Giảng viên nổi tiếng</h2>
+        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {instructors.map((instructor) => (
             <div key={instructor.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
@@ -365,21 +361,23 @@ const HomePage = () => {
                backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
              }}>
         </div>
-        <h2 className="text-4xl font-bold mb-5">Join and get amazing discount.</h2>
+        <h2 className="text-4xl font-bold mb-5">Tham gia và nhận ưu đãi tuyệt vời.</h2>
         <p className="text-lg mb-10 opacity-90">
-          With our responsive themes and mobile and desktop apps.
+          Với giao diện responsive và ứng dụng di động, máy tính.
         </p>
         <div className="flex justify-center gap-4 max-w-md mx-auto">
           <input 
             type="email" 
-            placeholder="Email Address" 
+            placeholder="Địa chỉ Email" 
             className="flex-1 px-5 py-4 rounded-full border-none text-gray-900 outline-none"
           />
           <button className="px-8 py-4 bg-teal-500 text-white rounded-full font-semibold hover:bg-teal-600 transition-all duration-300">
-            Subscribe
+            Đăng ký
           </button>
         </div>
       </div>
+{currentUser && <UserChatModal user={currentUser} />}
+
     </div>
   );
 };
