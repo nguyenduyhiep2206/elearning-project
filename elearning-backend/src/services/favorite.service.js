@@ -1,4 +1,4 @@
-const { favorites, courses } = require('../models');
+const { favorites, courses, users, categories } = require('../models');
 
 /**
 * Thêm một khóa học vào danh sách yêu thích của người dùng
@@ -25,7 +25,18 @@ const getFavoritesByUserId = async (userId) => {
     include: [{
       model: courses,
       as: 'course', // Phải khớp với alias trong init-models.js
-      attributes: ['courseid', 'coursename', 'price', 'imageurl'],
+      include: [
+        {
+          model: categories,
+          as: 'category',
+          attributes: ['categoryid', 'categoryname'],
+        },
+        {
+          model: users,
+          as: 'teacher',
+          attributes: ['userid', 'fullname', 'email'],
+        },
+      ],
     }],
     order: [['addedat', 'DESC']],
   });

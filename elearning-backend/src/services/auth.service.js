@@ -53,7 +53,6 @@ const login = async (email, password) => {
                 id: user.userid,
                 fullName: user.fullname,
                 email: user.email,
-
                 role: user.role,
                 isActive: user.isactive,
                 createdAt: user.createdat,

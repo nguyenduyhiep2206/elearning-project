@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { cartService } from '../services';
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -9,6 +10,7 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isBrowseMenuOpen, setIsBrowseMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -36,8 +38,63 @@ const Header = () => {
   const handleLogout = async () => {
     closeAllMenus();
     await logout();
+    setCartItemCount(0); // Reset cart count on logout
     navigate('/');
   };
+
+  // Lấy chữ cái đầu tiên từ tên hoặc email
+  const getInitials = () => {
+    if (user?.name) {
+      // Lấy chữ cái đầu tiên của từ đầu tiên và từ cuối cùng
+      const nameParts = user.name.trim().split(' ');
+      if (nameParts.length > 1) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      }
+      return user.name[0].toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Fetch cart items count
+  const fetchCartCount = async () => {
+    if (!isAuthenticated) {
+      setCartItemCount(0);
+      return;
+    }
+
+    try {
+      const response = await cartService.getCart();
+      const items = response.data?.data || response.data || [];
+      setCartItemCount(items.length);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartItemCount(0);
+    }
+  };
+
+  // Fetch cart count when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCartCount();
+    } else {
+      setCartItemCount(0);
+    }
+  }, [isAuthenticated]);
+
+  // Refresh cart count when navigating back to the page (e.g., from cart page)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isAuthenticated) {
+        fetchCartCount();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isAuthenticated]);
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -59,7 +116,7 @@ const Header = () => {
                 onClick={toggleBrowseMenu}
                 className="hidden md:flex items-center gap-1 cursor-pointer text-gray-600 hover:text-gray-900"
               >
-                <span className="text-sm font-medium">Browse</span>
+                <span className="text-sm font-medium">Danh mục</span>
                 <i className={`fas fa-chevron-down transition-transform ${isBrowseMenuOpen ? 'rotate-180' : ''}`}></i>
               </button>
 
@@ -72,36 +129,36 @@ const Header = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Design</h3>
-                            <p className="text-sm text-gray-500">All About Design Course</p>
+                            <h3 className="font-semibold text-gray-900">Thiết kế</h3>
+                            <p className="text-sm text-gray-500">Tất cả về khóa học thiết kế</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Programming</h3>
-                            <p className="text-sm text-gray-500">Website and Mobile Programming</p>
+                            <h3 className="font-semibold text-gray-900">Lập trình</h3>
+                            <p className="text-sm text-gray-500">Lập trình Web và Mobile</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Business & Marketing</h3>
-                            <p className="text-sm text-gray-500">Website and Mobile Programming</p>
+                            <h3 className="font-semibold text-gray-900">Kinh doanh & Marketing</h3>
+                            <p className="text-sm text-gray-500">Chiến lược và phát triển</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Photo & Video</h3>
-                            <p className="text-sm text-gray-500">Website and Mobile Programming</p>
+                            <h3 className="font-semibold text-gray-900">Ảnh & Video</h3>
+                            <p className="text-sm text-gray-500">Kỹ năng quay chụp và dựng</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Writing</h3>
-                            <p className="text-sm text-gray-500">Website and Mobile Programming</p>
+                            <h3 className="font-semibold text-gray-900">Viết lách</h3>
+                            <p className="text-sm text-gray-500">Nâng cao kỹ năng viết</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
@@ -111,22 +168,22 @@ const Header = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Illustration</h3>
-                            <p className="text-sm text-gray-500">How to be great illustrator</p>
+                            <h3 className="font-semibold text-gray-900">Minh họa</h3>
+                            <p className="text-sm text-gray-500">Trở thành họa sĩ minh họa giỏi</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">Graphic Design</h3>
-                            <p className="text-sm text-gray-500">Make more benefit from design</p>
+                            <h3 className="font-semibold text-gray-900">Thiết kế đồ họa</h3>
+                            <p className="text-sm text-gray-500">Tối ưu giá trị từ thiết kế</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
                         <div className="flex items-center justify-between group cursor-pointer">
                           <div>
-                            <h3 className="font-semibold text-gray-900">UI/UX Design</h3>
-                            <p className="text-sm text-gray-500">Make Design for website and apps</p>
+                            <h3 className="font-semibold text-gray-900">Thiết kế UI/UX</h3>
+                            <p className="text-sm text-gray-500">Thiết kế cho website và ứng dụng</p>
                           </div>
                           <i className="fas fa-chevron-right text-gray-400 group-hover:text-gray-600"></i>
                         </div>
@@ -144,7 +201,7 @@ const Header = () => {
               <div className="flex items-center bg-gray-100 rounded-lg px-4 py-2">
                 <input
                   type="text"
-                  placeholder="Search for course"
+                  placeholder="Tìm kiếm khóa học"
                   className="bg-transparent outline-none text-gray-700 placeholder-gray-500 w-full"
                 />
                 <i className="fas fa-search text-gray-400"></i>
@@ -156,7 +213,7 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-4">
             {/* Become Instructor Link */}
             <a href="#" className="text-gray-700 hover:text-gray-900 text-sm font-medium">
-              Become instructor
+              Trở thành giảng viên
             </a>
 
             {/* When NOT logged in */}
@@ -165,7 +222,7 @@ const Header = () => {
                 {/* Login Button */}
                 <Link to="/login">
                   <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                    Login
+                    Đăng nhập
                   </button>
                 </Link>
 
@@ -173,7 +230,7 @@ const Header = () => {
                 <Link to="/register">
                   <button className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors flex items-center gap-2">
                     <i className="fas fa-clock"></i>
-                    <span>Sign Up</span>
+                    <span>Đăng ký</span>
                   </button>
                 </Link>
               </div>
@@ -183,10 +240,16 @@ const Header = () => {
             {isAuthenticated && (
               <div className="flex items-center gap-4">
                 {/* Shopping Cart */}
-                <button className="relative p-2 text-gray-700 hover:text-gray-900">
-                  <i className="fas fa-shopping-cart text-lg"></i>
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
-                </button>
+                <Link to="/cart">
+                  <button className="relative p-2 text-gray-700 hover:text-gray-900">
+                    <i className="fas fa-shopping-cart text-lg"></i>
+                    {cartItemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {cartItemCount > 99 ? '99+' : cartItemCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
 
                 {/* Notification Bell */}
                 <button className="relative p-2 text-gray-700 hover:text-gray-900">
@@ -200,11 +263,17 @@ const Header = () => {
                     onClick={toggleUserMenu}
                     className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100"
                   >
-                    <img
-                      src={user?.avatar || 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face'}
-                      alt={user?.name || 'User Avatar'}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                    />
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user?.name || 'User Avatar'}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-teal-500 border-2 border-gray-200 flex items-center justify-center text-white font-semibold text-sm">
+                        {getInitials()}
+                      </div>
+                    )}
                   </button>
 
                   {/* User Dropdown Menu */}
@@ -212,17 +281,17 @@ const Header = () => {
                     <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                       {/* User Info */}
                       <div className="p-4 border-b border-gray-200">
-                        <h3 className="font-semibold text-gray-900">{user?.name || 'Jonathan Doe'}</h3>
-                        <p className="text-sm text-gray-500">{user?.email || 'doe.jonathan@email.com'}</p>
+                        <h3 className="font-semibold text-gray-900">{user?.name || 'Người dùng'}</h3>
+                        <p className="text-sm text-gray-500">{user?.email || 'user@example.com'}</p>
                       </div>
 
                       {/* Menu Items */}
                       <div className="py-2">
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Courses</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Cart</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wishlist</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Notifications</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account Settings</a>
+                        <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Khóa học của tôi</Link>
+                        <Link to="/cart" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Giỏ hàng</Link>
+                        <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Lịch sử đơn hàng</Link>
+                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Thông báo</a>
+                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cài đặt tài khoản</a>
                       </div>
 
                       {/* Logout Button */}
@@ -231,7 +300,7 @@ const Header = () => {
                           onClick={handleLogout}
                           className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
                         >
-                          Logout
+                          Đăng xuất
                         </button>
                       </div>
                     </div>
@@ -259,30 +328,34 @@ const Header = () => {
                 <i className="fas fa-search text-gray-400"></i>
                 <input
                   type="text"
-                  placeholder="Search for course"
+                  placeholder="Tìm kiếm khóa học"
                   className="bg-transparent ml-2 outline-none text-gray-700 placeholder-gray-500 w-full"
                 />
               </div>
 
               {/* Mobile Browse */}
               <div className="flex items-center gap-1 text-gray-600 py-2">
-                <span className="text-sm font-medium">Browse</span>
+                <span className="text-sm font-medium">Danh mục</span>
                 <i className="fas fa-chevron-down"></i>
               </div>
 
               {/* Mobile Actions */}
               <a href="#" className="block text-gray-700 hover:text-gray-900 text-sm font-medium py-2">
-                Become instructor
+                Trở thành giảng viên
               </a>
 
               {/* Mobile Shopping Cart */}
-              <div className="flex items-center justify-between py-2">
-                <span className="text-gray-700 text-sm font-medium">Shopping Cart</span>
+              <Link to="/cart" className="flex items-center justify-between py-2">
+                <span className="text-gray-700 text-sm font-medium">Giỏ hàng</span>
                 <button className="relative p-2 text-gray-700 hover:text-gray-900">
                   <i className="fas fa-shopping-cart text-lg text-gray-700"></i>
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    </span>
+                  )}
                 </button>
-              </div>
+              </Link>
 
               <div className="flex items-center gap-4">
                 <Link to="/login" className="flex-1">
