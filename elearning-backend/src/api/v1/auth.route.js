@@ -23,6 +23,13 @@ router.get("/me", authMiddleware.verifyToken, (req, res) => {
 });
 router.get(
   "/google",
+  (req, res, next) => {
+    // Log để debug
+    console.log('🔐 Google OAuth initiated');
+    console.log('   Callback URL:', process.env.GOOGLE_CALLBACK_URL);
+    console.log('   Client ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Set' : '❌ Missing');
+    next();
+  },
   passport.authenticate("google", {
     scope: ["profile", "email"],
   })

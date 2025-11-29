@@ -1,4 +1,4 @@
-const { courses, chapters, lessons, orders, orderdetails, lessonprogress, users, categories, quizzes, quizquestions, quizoptions, quizsessions, quizanswers } = require('../models');
+const { courses, chapters, lessons, orders, orderdetails, lessonprogress, users, categories, quizzes, quizquestions, quizoptions, quizsessions, quizanswers, coursecompletions, certificates, userdetails, notifications } = require('../models');
 const { Op } = require('sequelize');
 
 class LearningService {
@@ -294,6 +294,15 @@ class LearningService {
         await progress.save();
       }
 
+      // Nếu bài học vừa được đánh dấu hoàn thành, kiểm tra xem đã hoàn thành 100% khóa học chưa
+      if (isCompleted) {
+        const courseId = lesson.chapter.course.courseid;
+        // Chạy ngầm (không await) để không chặn response
+        this.checkCourseCompletionAndIssueCertificate(userId, courseId).catch(err => {
+          console.error('Error in background certificate issuance:', err);
+        });
+      }
+
       return progress.toJSON();
     } catch (error) {
       console.error('Error in updateProgress:', error);
@@ -401,6 +410,33 @@ class LearningService {
             ? Math.round((completedProgress / totalLessons) * 100) 
             : 0;
 
+          // Kiểm tra xem đã hoàn thành khóa học chưa
+          let completion = await coursecompletions.findOne({
+            where: {
+              studentid: userId,
+              courseid: courseId,
+            },
+          });
+
+          // Nếu chưa có completion record nhưng đã hoàn thành 100%, tự động tạo
+          if (!completion && progressPercentage === 100 && totalLessons > 0) {
+            try {
+              const [newCompletion, created] = await coursecompletions.findOrCreate({
+                where: {
+                  studentid: userId,
+                  courseid: courseId,
+                },
+                defaults: {
+                  studentid: userId,
+                  courseid: courseId,
+                  completedat: new Date(),
+                },
+              });
+            } catch (err) {
+              console.error(`Error creating completion for course ${courseId}:`, err);
+            }
+          }
+
           return {
             ...orderDetail.course.toJSON(),
             progress: {
@@ -408,6 +444,8 @@ class LearningService {
               totalLessons,
               progressPercentage,
             },
+            isCompleted: !!completion || (progressPercentage === 100 && totalLessons > 0),
+            completedAt: completion?.completedat || null,
             enrolledAt: orderDetail.order.createdat,
           };
         })
@@ -466,7 +504,7 @@ class LearningService {
         include: [
           {
             model: quizquestions,
-            as: 'quizquestions',
+            as: 'questions',
             required: false,
             attributes: ['questionid'], // Chỉ lấy ID để đếm số câu hỏi
           },
@@ -619,11 +657,11 @@ class LearningService {
             include: [
               {
                 model: quizquestions,
-                as: 'quizquestions',
+                as: 'questions',
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
                 order: [['questionid', 'ASC']],
@@ -632,11 +670,11 @@ class LearningService {
           },
           {
             model: quizanswers,
-            as: 'quizanswers',
+            as: 'answers',
             include: [
               {
                 model: quizoptions,
-                as: 'selectedoption',
+                as: 'selectedOption',
               },
             ],
           },
@@ -756,7 +794,7 @@ class LearningService {
           },
           {
             model: quizanswers,
-            as: 'quizanswers',
+            as: 'answers',
           },
         ],
       });
@@ -795,11 +833,11 @@ class LearningService {
             include: [
               {
                 model: quizquestions,
-                as: 'quizquestions',
+                as: 'questions',
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
               },
@@ -807,7 +845,7 @@ class LearningService {
           },
           {
             model: quizanswers,
-            as: 'quizanswers',
+            as: 'answers',
             include: [
               {
                 model: quizquestions,
@@ -815,13 +853,13 @@ class LearningService {
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
               },
               {
                 model: quizoptions,
-                as: 'selectedoption',
+                as: 'selectedOption',
               },
             ],
           },
@@ -856,11 +894,11 @@ class LearningService {
             include: [
               {
                 model: quizquestions,
-                as: 'quizquestions',
+                as: 'questions',
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
               },
@@ -868,7 +906,7 @@ class LearningService {
           },
           {
             model: quizanswers,
-            as: 'quizanswers',
+            as: 'answers',
             include: [
               {
                 model: quizquestions,
@@ -876,13 +914,13 @@ class LearningService {
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
               },
               {
                 model: quizoptions,
-                as: 'selectedoption',
+                as: 'selectedOption',
               },
             ],
           },
@@ -898,6 +936,205 @@ class LearningService {
     } catch (error) {
       console.error('Error in getQuizResult:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Kiểm tra xem học viên đã hoàn thành 100% khóa học chưa và tự động cấp chứng chỉ
+   * Hàm này chạy ngầm (background) để không chặn response
+   * @param {number} studentId - ID của học viên
+   * @param {number} courseId - ID của khóa học
+   */
+  async checkCourseCompletionAndIssueCertificate(studentId, courseId) {
+    try {
+      // 1. Đếm tổng số bài học trong khóa học
+      const totalLessons = await lessons.count({
+        where: { courseid: courseId }
+      });
+
+      if (totalLessons === 0) {
+        console.log(`[Auto Certificate] Course ${courseId} has no lessons. Skipping.`);
+        return;
+      }
+
+      // 2. Đếm số bài học mà học viên đã hoàn thành
+      const completedLessons = await lessonprogress.count({
+        where: {
+          studentid: studentId,
+          iscompleted: true
+        },
+        include: [{
+          model: lessons,
+          as: 'lesson',
+          where: { courseid: courseId },
+          required: true
+        }]
+      });
+
+      // 3. Kiểm tra xem đã hoàn thành 100% chưa
+      if (totalLessons !== completedLessons) {
+        console.log(`[Auto Certificate] Student ${studentId} has completed ${completedLessons}/${totalLessons} lessons in course ${courseId}. Not yet 100%.`);
+        return;
+      }
+
+      console.log(`[Auto Certificate] ✅ Student ${studentId} has completed 100% of course ${courseId}!`);
+
+      // 4. Kiểm tra xem đã có coursecompletion record chưa
+      let completion = await coursecompletions.findOne({
+        where: {
+          studentid: studentId,
+          courseid: courseId
+        }
+      });
+
+      // 5. Nếu chưa có, tạo mới
+      if (!completion) {
+        console.log(`[Auto Certificate] Creating course completion record...`);
+        [completion] = await coursecompletions.findOrCreate({
+          where: {
+            studentid: studentId,
+            courseid: courseId
+          },
+          defaults: {
+            studentid: studentId,
+            courseid: courseId,
+            completedat: new Date()
+          }
+        });
+      }
+
+      // 6. Kiểm tra xem đã có certificate chưa
+      let certificate = await certificates.findOne({
+        where: {
+          studentid: studentId,
+          courseid: courseId
+        }
+      });
+
+      // 7. Nếu chưa có certificate, tạo mới
+      if (!certificate) {
+        console.log(`[Auto Certificate] Creating certificate record...`);
+        certificate = await certificates.create({
+          studentid: studentId,
+          courseid: courseId,
+          issuedat: new Date()
+        });
+      }
+
+      // 8. Nếu certificate đã được mint rồi, không cần làm gì nữa
+      if (certificate.transactionhash) {
+        console.log(`[Auto Certificate] Certificate ${certificate.certificateid} already minted. Skipping.`);
+        return;
+      }
+
+      // 9. Lấy thông tin student và userdetails để kiểm tra wallet address
+      const student = await users.findByPk(studentId, {
+        include: [{
+          model: userdetails,
+          as: 'userdetails',
+          required: false
+        }]
+      });
+
+      if (!student) {
+        console.log(`[Auto Certificate] Student ${studentId} not found. Skipping.`);
+        return;
+      }
+
+      // 10. Lấy wallet address từ userdetails
+      let walletAddress = null;
+      if (student.userdetails) {
+        if (Array.isArray(student.userdetails) && student.userdetails.length > 0) {
+          walletAddress = student.userdetails[0].walletaddress;
+        } else if (student.userdetails.walletaddress) {
+          walletAddress = student.userdetails.walletaddress;
+        }
+      }
+
+      if (!walletAddress) {
+        console.log(`[Auto Certificate] Student ${studentId} does not have wallet address. Certificate created but not minted.`);
+        // Tạo notification thông báo học viên cần cập nhật wallet address
+        await notifications.create({
+          userid: studentId,
+          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví để nhận chứng chỉ NFT.`,
+          isread: false,
+          createdat: new Date()
+        });
+        return;
+      }
+
+      // 11. Validate wallet address format
+      if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+        console.log(`[Auto Certificate] Invalid wallet address format for student ${studentId}. Certificate created but not minted.`);
+        await notifications.create({
+          userid: studentId,
+          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví hợp lệ để nhận chứng chỉ NFT.`,
+          isread: false,
+          createdat: new Date()
+        });
+        return;
+      }
+
+      // 12. Lấy thông tin course
+      const course = await courses.findByPk(courseId);
+      if (!course) {
+        console.log(`[Auto Certificate] Course ${courseId} not found. Skipping.`);
+        return;
+      }
+
+      // 13. Import certificateService và blockchainService
+      const certificateService = require('./certificate.service');
+      const blockchainService = require('./blockchainService');
+
+      // 14. Tạo metadata JSON
+      console.log(`[Auto Certificate] Creating metadata for certificate ${certificate.certificateid}...`);
+      const metadataUrl = await certificateService.createCertificateMetadata(
+        certificate.certificateid,
+        student,
+        course
+      );
+
+      // 15. Mint certificate trên blockchain
+      console.log(`[Auto Certificate] Minting certificate ${certificate.certificateid} to wallet ${walletAddress}...`);
+      const blockchainResult = await blockchainService.mintCertificateOnChain(
+        walletAddress,
+        metadataUrl,
+        certificate.certificateid
+      );
+
+      // 16. Cập nhật certificate với transaction hash và token ID
+      await certificate.update({
+        transactionhash: blockchainResult.transactionHash,
+        tokenid: blockchainResult.tokenId
+      });
+
+      console.log(`[Auto Certificate] ✅ Certificate ${certificate.certificateid} minted successfully!`);
+      console.log(`   Transaction Hash: ${blockchainResult.transactionHash}`);
+      console.log(`   Token ID: ${blockchainResult.tokenId}`);
+
+      // 17. Tạo notification cho học viên
+      await notifications.create({
+        userid: studentId,
+        message: `Chúc mừng! Chứng chỉ của bạn đã được gửi đến ví ${walletAddress.substring(0, 10)}...${walletAddress.substring(walletAddress.length - 8)}. Token ID: ${blockchainResult.tokenId}`,
+        isread: false,
+        createdat: new Date()
+      });
+
+    } catch (error) {
+      // Không throw error để không làm gián đoạn quá trình
+      console.error(`[Auto Certificate] ❌ Error auto-issuing certificate for student ${studentId}, course ${courseId}:`, error.message);
+      
+      // Tạo notification thông báo lỗi (nếu có thể)
+      try {
+        await notifications.create({
+          userid: studentId,
+          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Chứng chỉ đang được xử lý và sẽ được gửi đến ví của bạn sớm nhất.`,
+          isread: false,
+          createdat: new Date()
+        });
+      } catch (notifError) {
+        console.error('Error creating notification:', notifError);
+      }
     }
   }
 }

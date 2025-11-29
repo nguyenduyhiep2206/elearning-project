@@ -36,8 +36,8 @@ const QuizTakingPage = () => {
 
   const session = sessionData;
   const quiz = session?.quiz;
-  const questions = quiz?.quizquestions || [];
-  const answers = session?.quizanswers || [];
+  const questions = quiz?.questions || [];
+  const answers = session?.answers || [];
 
   // Initialize selected answers from existing answers
   useEffect(() => {
@@ -231,7 +231,7 @@ const QuizTakingPage = () => {
                   </h3>
                 </div>
                 <div className="space-y-3">
-                  {question.quizoptions?.map((option) => (
+                  {question.options?.map((option) => (
                     <label
                       key={option.optionid}
                       className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition ${

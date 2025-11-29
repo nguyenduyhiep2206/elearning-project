@@ -72,18 +72,20 @@ const MyCoursesPage = () => {
 
   const renderCourseCard = (course, isEnrolled = false) => {
     // Xử lý cấu trúc dữ liệu khác nhau giữa enrolled và favorites
-    let courseId, courseData, progress;
+    let courseId, courseData, progress, isCompleted;
     
     if (isEnrolled) {
       // Enrolled courses: course object trực tiếp với progress
       courseId = course.courseid;
       courseData = course;
       progress = course.progress?.progressPercentage || 0;
+      isCompleted = course.isCompleted || false;
     } else {
       // Favorites: course nằm trong favorite.course
       courseId = course.course?.courseid || course.courseid;
       courseData = course.course || course;
       progress = null;
+      isCompleted = false;
     }
     
     return (
@@ -100,8 +102,15 @@ const MyCoursesPage = () => {
             className="w-full h-48 object-cover"
           />
           {isEnrolled && (
-            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
-              Đã đăng ký
+            <div className="absolute top-2 right-2 flex flex-col gap-1">
+              <div className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
+                Đã đăng ký
+              </div>
+              {isCompleted && (
+                <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                  ✓ Đã hoàn thành
+                </div>
+              )}
             </div>
           )}
         </div>

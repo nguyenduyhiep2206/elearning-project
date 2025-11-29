@@ -1,5 +1,7 @@
 const userService = require('../services/user.service');
-const multer = require('multer');  // ← Thêm dòng này!
+const multer = require('multer');
+const apiResponse = require('../utils/apiResponse');
+
 exports.getAllUsers = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -21,6 +23,7 @@ exports.getAllUsers = async (req, res, next) => {
         next(error);
     }
 };
+
 exports.createUser = async (req, res, next) => {
     try {
         const user = await userService.createUser(req.body);
@@ -49,6 +52,7 @@ exports.deleteUser = async (req, res, next) => {
         next(error);
     }
 };
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/uploads/profiles/');
@@ -57,6 +61,7 @@ const storage = multer.diskStorage({
         cb(null, `${Date.now()}-${file.originalname}`);
     }
 });
+
 const upload = multer({ 
     storage, 
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -68,8 +73,6 @@ const upload = multer({
         }
     }
 });
-
-// ... (các hàm cũ)
 
 // Upload ảnh profile (single file)
 exports.uploadProfileImage = async (req, res, next) => {
@@ -90,7 +93,33 @@ exports.uploadProfileImage = async (req, res, next) => {
         next(error);
     }
 };
-// Lấy chi tiết thông tin người dùng
+
+// Lấy thông tin user theo ID (user có thể xem thông tin của chính mình)
+exports.getUserById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id || req.user.userid;
+        
+        // User chỉ có thể xem thông tin của chính mình (trừ admin)
+        if (parseInt(id) !== parseInt(userId) && req.user.role?.toLowerCase() !== 'admin') {
+            return res.status(403).json({ 
+                message: 'Bạn không có quyền xem thông tin người dùng này.' 
+            });
+        }
+        
+        const userData = await userService.getUserDetails(id);
+        
+        res.status(200).json({ 
+            success: true,
+            message: 'Lấy thông tin người dùng thành công.', 
+            data: userData 
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Lấy chi tiết thông tin người dùng (cho admin)
 exports.getUserDetails = async (req, res, next) => {
     try {
         const { id } = req.params; // userId từ params (:id)
@@ -104,6 +133,7 @@ exports.getUserDetails = async (req, res, next) => {
         next(error);
     }
 };
+
 exports.approveTeacherRequest = async (req, res, next) => {
     try {
         const { id } = req.params; // userId từ params
@@ -113,5 +143,55 @@ exports.approveTeacherRequest = async (req, res, next) => {
         res.status(200).json(result);
     } catch (error) {
         next(error);
+    }
+};
+
+exports.updateWalletAddress = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { walletAddress } = req.body;
+
+        if (!walletAddress) {
+            return apiResponse.validationError(res, {
+                walletAddress: 'Wallet address là bắt buộc'
+            }, 'Thiếu thông tin bắt buộc');
+        }
+
+        // Validate wallet address format
+        if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+            return apiResponse.validationError(res, {
+                walletAddress: 'Địa chỉ ví không hợp lệ. Phải là địa chỉ Ethereum hợp lệ (0x...)'
+            }, 'Địa chỉ ví không hợp lệ');
+        }
+
+        const updatedUser = await userService.updateWalletAddress(userId, walletAddress);
+
+        return apiResponse.success(
+            res,
+            updatedUser,
+            'Đã cập nhật địa chỉ ví thành công'
+        );
+    } catch (error) {
+        // Chỉ log trong development mode
+        if (process.env.NODE_ENV !== 'production') {
+            console.error('Lỗi khi cập nhật wallet address:', error);
+        }
+        
+        // Xử lý lỗi wallet đã được sử dụng
+        if (error.message && error.message.includes('đã được sử dụng bởi tài khoản khác')) {
+            return apiResponse.error(
+                res,
+                error.message,
+                409 // Conflict
+            );
+        }
+        
+        // Trả về message lỗi cho người dùng (bỏ prefix "Lỗi khi cập nhật wallet address: " nếu có)
+        let errorMessage = error.message || 'Lỗi khi cập nhật địa chỉ ví';
+        if (errorMessage.includes('Lỗi khi cập nhật wallet address: ')) {
+            errorMessage = errorMessage.replace('Lỗi khi cập nhật wallet address: ', '');
+        }
+        
+        return apiResponse.error(res, errorMessage, 500);
     }
 };

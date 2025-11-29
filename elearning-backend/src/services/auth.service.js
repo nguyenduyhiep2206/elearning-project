@@ -20,8 +20,9 @@ const login = async (email, password) => {
             throw new Error('Email hoặc mật khẩu không chính xác');
         }
 
-        if (user.isactive === false) {
-            throw new Error('Tài khoản đã bị vô hiệu hóa');
+        // Kiểm tra nếu user không có password (đăng ký bằng Google)
+        if (!user.passwordhash) {
+            throw new Error('Tài khoản này được đăng ký bằng Google. Vui lòng đăng nhập bằng Google.');
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.passwordhash);
@@ -43,10 +44,7 @@ const login = async (email, password) => {
             audience: 'elearning-users'
         });
 
-        await users.update(
-            { lastlogin: new Date() },
-            { where: { userid: user.userid } }
-        );
+        // Không cần cập nhật lastlogin vì model không có field này
 
         return {
             user: {
@@ -54,9 +52,7 @@ const login = async (email, password) => {
                 fullName: user.fullname,
                 email: user.email,
                 role: user.role,
-                isActive: user.isactive,
-                createdAt: user.createdat,
-                lastLogin: new Date()
+                createdAt: user.createdat
             },
             token
         };
@@ -85,16 +81,15 @@ const verifyToken = async (token) => {
             audience: 'elearning-users'
         });
 
-        // Kiểm tra user còn tồn tại và active không
+        // Kiểm tra user còn tồn tại
         const user = await users.findOne({ 
             where: { 
-                userid: decoded.userId,
-                isactive: true 
+                userid: decoded.userId
             } 
         });
 
         if (!user) {
-            throw new Error('Người dùng không tồn tại hoặc đã bị vô hiệu hóa');
+            throw new Error('Người dùng không tồn tại');
         }
 
         return decoded;
@@ -150,10 +145,8 @@ const register = async (fullName, email, password) => {
             fullname: fullName.trim(),
             email: email.toLowerCase().trim(),
             passwordhash: hashedPassword,
-            role: 'Student', // Default role
-            isactive: true,
-            createdat: new Date(),
-            lastlogin: null
+            role: 'student', // Lowercase để phù hợp với ENUM
+            provider: 'local'
         });
 
         // Generate JWT token
@@ -177,9 +170,7 @@ const register = async (fullName, email, password) => {
                 fullName: newUser.fullname,
                 email: newUser.email,
                 role: newUser.role,
-                isActive: newUser.isactive,
-                createdAt: newUser.createdat,
-                lastLogin: null
+                createdAt: newUser.createdat
             },
             token
         };
@@ -202,17 +193,20 @@ const loginWithGoogle = async (googleProfile) => {
   });
 
   if (!user) {
+    // Tạo user mới từ Google
+    const displayName = googleProfile.displayName || 
+      (googleProfile.name?.givenName && googleProfile.name?.familyName 
+        ? `${googleProfile.name.givenName} ${googleProfile.name.familyName}` 
+        : 'User');
+    
     user = await users.create({
-      fullname: googleProfile.displayName,
+      fullname: displayName,
       email: email.toLowerCase().trim(),
       passwordhash: null,
-      role: "Student",
+      role: "student", // Lowercase để phù hợp với ENUM
       provider: "google",
-      googleid: googleProfile.id,
-      isactive: true,
+      googleid: googleProfile.id?.toString() || null,
       profilepicture: googleProfile.photos?.[0]?.value || null,
-      createdat: new Date(),
-      lastlogin: new Date(),
     });
 
     return { isNew: true, user };
@@ -224,10 +218,12 @@ const loginWithGoogle = async (googleProfile) => {
     );
   }
 
-  await user.update({
-    lastlogin: new Date(),
-    profilepicture: googleProfile.photos?.[0]?.value || user.profilepicture,
-  });
+  // Cập nhật profile picture nếu có
+  if (googleProfile.photos?.[0]?.value) {
+    await user.update({
+      profilepicture: googleProfile.photos[0].value,
+    });
+  }
 
   const token = jwt.sign(
     {

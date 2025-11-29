@@ -1011,7 +1011,7 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
     
     if (question) {
       setEditingQuestion(question);
-      const options = question.quizoptions || [];
+      const options = question.options || [];
       setQuestionForm({
         questionText: question.questiontext || '',
         options: options.map((opt) => opt.optiontext || '').concat(['', '', '', '']).slice(0, 4),
@@ -1192,7 +1192,7 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
                               {quiz.timelimit && <span>Thời gian: {quiz.timelimit} phút</span>}
                               <span>Số lần làm: {quiz.maxattempts}</span>
                               <span>
-                                Câu hỏi: {quiz.quizquestions?.length || 0}
+                                Câu hỏi: {quiz.questions?.length || 0}
                               </span>
                             </div>
                           </div>
@@ -1253,15 +1253,15 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
                       </button>
                     </div>
 
-                  {quizDetails.quizquestions?.length === 0 ? (
+                  {quizDetails.questions?.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <p>Chưa có câu hỏi nào. Hãy thêm câu hỏi đầu tiên!</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {quizDetails.quizquestions?.map((question, index) => {
+                      {quizDetails.questions?.map((question, index) => {
                         const questionId = question.questionid || question.id;
-                        const correctOption = question.quizoptions?.find(
+                        const correctOption = question.options?.find(
                           (opt) => opt.optionid === question.correctoptionid
                         );
                         return (
@@ -1273,7 +1273,7 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
                                   <span className="text-gray-900">{question.questiontext}</span>
                                 </div>
                                 <div className="ml-6 space-y-1">
-                                  {question.quizoptions?.map((option, optIndex) => {
+                                  {question.options?.map((option, optIndex) => {
                                     const isCorrect = option.optionid === question.correctoptionid;
                                     return (
                                       <div
@@ -1350,7 +1350,7 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
                   {quizResults.map((session) => {
                     const sessionId = session.sessionid || session.id;
                     const student = session.student || {};
-                    const answers = session.quizanswers || [];
+                    const answers = session.answers || [];
                     const correctCount = answers.filter((ans) => ans.iscorrect).length;
                     const totalQuestions = answers.length;
                     const score = session.score !== null ? session.score : (correctCount / totalQuestions) * 100;
@@ -1398,8 +1398,8 @@ const QuizManagementModal = ({ lessonId, onClose, setNotification }) => {
                         <div className="space-y-2">
                           {answers.map((answer, index) => {
                             const question = answer.question || {};
-                            const selectedOption = answer.selectedoption || {};
-                            const correctOption = question.quizoptions?.find(
+                            const selectedOption = answer.selectedOption || {};
+                            const correctOption = question.options?.find(
                               (opt) => opt.optionid === question.correctoptionid
                             );
                             const isCorrect = answer.iscorrect;

@@ -67,9 +67,10 @@ class AuthService {
   }
 
 
-  async getCurrentUser() {
+  async getCurrentUser(token = null) {
     try {
-      const res = await api.get('/auth/me');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await api.get('/auth/me', { headers });
       return {
         success: true,
         data: { user: res.data.data?.user || res.data.user },
@@ -81,13 +82,15 @@ class AuthService {
     }
   }
 
- googleAuthUrl = (mode = "login") => {
-   `${import.meta.env.VITE_API_URL}/auth/google?mode=${mode}`;
-};
+  googleAuthUrl(mode = "login") {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    return `${apiUrl}/api/v1/auth/google?mode=${mode}`;
+  }
 
 
   loginWithFacebook() {
-    window.location.href = `${import.meta.env.VITE_API_URL}/api/v1/auth/facebook`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/api/v1/auth/facebook`;
   }
 }
 

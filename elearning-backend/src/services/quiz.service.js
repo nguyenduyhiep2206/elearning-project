@@ -39,11 +39,11 @@ class QuizService {
         include: [
           {
             model: quizquestions,
-            as: 'quizquestions',
+            as: 'questions',
             include: [
               {
                 model: quizoptions,
-                as: 'quizoptions',
+                as: 'options',
               },
             ],
           },
@@ -69,12 +69,12 @@ class QuizService {
         include: [
           {
             model: quizquestions,
-            as: 'quizquestions',
+            as: 'questions',
             required: false,
             include: [
               {
                 model: quizoptions,
-                as: 'quizoptions',
+                as: 'options',
                 required: false,
               },
             ],
@@ -154,12 +154,12 @@ class QuizService {
         include: [
           {
             model: quizquestions,
-            as: 'quizquestions',
+            as: 'questions',
             required: false,
             include: [
               {
                 model: quizoptions,
-                as: 'quizoptions',
+                as: 'options',
                 required: false,
               },
             ],
@@ -258,7 +258,7 @@ class QuizService {
         include: [
           {
             model: quizoptions,
-            as: 'quizoptions',
+            as: 'options',
           },
         ],
       });
@@ -320,7 +320,7 @@ class QuizService {
         include: [
           {
             model: quizoptions,
-            as: 'quizoptions',
+            as: 'options',
           },
         ],
       });
@@ -375,7 +375,7 @@ class QuizService {
           },
           {
             model: quizanswers,
-            as: 'quizanswers',
+            as: 'answers',
             include: [
               {
                 model: quizquestions,
@@ -383,13 +383,13 @@ class QuizService {
                 include: [
                   {
                     model: quizoptions,
-                    as: 'quizoptions',
+                    as: 'options',
                   },
                 ],
               },
               {
                 model: quizoptions,
-                as: 'selectedoption',
+                as: 'selectedOption',
               },
             ],
           },

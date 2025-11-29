@@ -288,10 +288,12 @@ const Header = () => {
                       {/* Menu Items */}
                       <div className="py-2">
                         <Link to="/my-courses" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Khóa học của tôi</Link>
+                        <Link to="/my-certificates" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Chứng chỉ của tôi</Link>
+                        <Link to="/my-nfts" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">NFT trong ví</Link>
                         <Link to="/cart" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Giỏ hàng</Link>
                         <Link to="/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Lịch sử đơn hàng</Link>
                         <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Thông báo</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cài đặt tài khoản</a>
+                        <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cài đặt tài khoản</Link>
                       </div>
 
                       {/* Logout Button */}

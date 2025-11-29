@@ -22,14 +22,12 @@ const [query] = useSearchParams();
     const fetchUser = async () => {
       try {
         const response = await AuthService.getCurrentUser(token); 
-        const userObj = response.data;
+        const userObj = response.data.user || response.data; // Xử lý cả hai format
 
         localStorage.setItem("user", JSON.stringify(userObj));
 
-        const role = userObj.role?.toLowerCase();
-        if (role === "admin") navigate("/admin");
-        else if (role === "teacher") navigate("/teacher");
-        else navigate("/");
+        // Reload page để cập nhật auth context
+        window.location.href = '/';
       } catch (err) {
         console.error("Lấy thông tin user thất bại:", err);
         localStorage.removeItem("token");
@@ -88,7 +86,9 @@ const [query] = useSearchParams();
       console.log('❌ Đăng nhập thất bại:', error.message);
     }
   };
-     const googleLoginUrl = `${import.meta.env.VITE_API_URL}/auth/google?mode=login`;
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const googleLoginUrl = `${apiUrl}/api/v1/auth/google?mode=login`;
 
 
 

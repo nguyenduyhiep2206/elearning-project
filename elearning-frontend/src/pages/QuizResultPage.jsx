@@ -17,8 +17,8 @@ const QuizResultPage = () => {
 
   const session = resultData?.data?.data;
   const quiz = session?.quiz;
-  const questions = quiz?.quizquestions || [];
-  const answers = session?.quizanswers || [];
+  const questions = quiz?.questions || [];
+  const answers = session?.answers || [];
 
   if (isLoading) {
     return (
@@ -131,10 +131,10 @@ const QuizResultPage = () => {
             {questions.map((question, index) => {
               const answer = answerMap[question.questionid];
               const isCorrect = answer?.iscorrect;
-              const selectedOption = question.quizoptions?.find(
+              const selectedOption = question.options?.find(
                 opt => opt.optionid === answer?.selectedoptionid
               );
-              const correctOption = question.quizoptions?.find(
+              const correctOption = question.options?.find(
                 opt => opt.optionid === question.correctoptionid
               );
 
@@ -162,7 +162,7 @@ const QuizResultPage = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {question.quizoptions?.map((option) => {
+                    {question.options?.map((option) => {
                       const isSelected = option.optionid === answer?.selectedoptionid;
                       const isCorrectAnswer = option.optionid === question.correctoptionid;
 

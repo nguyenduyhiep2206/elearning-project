@@ -28,5 +28,8 @@
   "homepage": "https://github.com/nguyenduyhiep2206/elearning-project#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "pdfkit": "^0.17.2"
   }
 }

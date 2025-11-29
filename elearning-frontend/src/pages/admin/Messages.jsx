@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { messagesServices } from "../../services";
 
-const socket = io(import.meta.env.VITE_API_URL);
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const socket = io(apiUrl);
 
 export default function Messages() {
   const [users, setUsers] = useState([]);

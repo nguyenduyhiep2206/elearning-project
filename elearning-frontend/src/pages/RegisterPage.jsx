@@ -56,8 +56,8 @@ const RegisterPage = () => {
   };
 
   const registerWithGoogle = () => {
-
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google?mode=register`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    window.location.href = `${apiUrl}/api/v1/auth/google?mode=register`;
   };
 
   return (

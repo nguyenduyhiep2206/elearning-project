@@ -33,6 +33,12 @@ app.use(cors({
   credentials: true
 }));
 
+// Serve static files for metadata
+const path = require('path');
+app.use('/metadata', express.static(path.join(__dirname, 'public/metadata')));
+// Serve static files for certificates PDF
+app.use('/certificates', express.static(path.join(__dirname, 'public/certificates')));
+
 app.use('/api/v1', apiV1Router);
 
 const PORT = process.env.PORT || 3000;

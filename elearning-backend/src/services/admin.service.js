@@ -1,4 +1,5 @@
 const { orders, orderdetails, users, courses, coursereviews, promotions } = require('../models');
+const messageService = require('./message.service');
 
 class AdminService {
   /**
@@ -501,6 +502,90 @@ class AdminService {
     } catch (error) {
       console.error('Error in deletePromotion:', error);
       throw new Error(`Lỗi khi xóa mã giảm giá: ${error.message}`);
+    }
+  }
+
+  /**
+   * Lấy tất cả tin nhắn (cho admin)
+   * @param {Object} options - Tùy chọn: page, limit, senderId, receiverId, search, startDate, endDate, seen
+   * @returns {Promise<Object>} - Danh sách tin nhắn với phân trang
+   */
+  async getAllMessages(options = {}) {
+    try {
+      return await messageService.getAllMessagesForAdmin(options);
+    } catch (error) {
+      console.error('Error in getAllMessages:', error);
+      throw new Error(`Lỗi khi lấy danh sách tin nhắn: ${error.message}`);
+    }
+  }
+
+  /**
+   * Lấy thống kê tin nhắn (cho admin)
+   * @returns {Promise<Object>} - Thống kê tin nhắn
+   */
+  async getMessageStats() {
+    try {
+      return await messageService.getMessageStatsForAdmin();
+    } catch (error) {
+      console.error('Error in getMessageStats:', error);
+      throw new Error(`Lỗi khi lấy thống kê tin nhắn: ${error.message}`);
+    }
+  }
+
+  /**
+   * Xóa tin nhắn (cho admin)
+   * @param {number} messageId - ID tin nhắn
+   * @returns {Promise<Object>} - Kết quả xóa
+   */
+  async deleteMessage(messageId) {
+    try {
+      return await messageService.deleteMessageForAdmin(messageId);
+    } catch (error) {
+      console.error('Error in deleteMessage:', error);
+      throw new Error(`Lỗi khi xóa tin nhắn: ${error.message}`);
+    }
+  }
+
+  /**
+   * Xóa nhiều tin nhắn (cho admin)
+   * @param {Array<number>} messageIds - Danh sách ID tin nhắn
+   * @returns {Promise<Object>} - Kết quả xóa
+   */
+  async deleteMultipleMessages(messageIds) {
+    try {
+      return await messageService.deleteMultipleMessagesForAdmin(messageIds);
+    } catch (error) {
+      console.error('Error in deleteMultipleMessages:', error);
+      throw new Error(`Lỗi khi xóa tin nhắn: ${error.message}`);
+    }
+  }
+
+  /**
+   * Lấy tất cả cuộc trò chuyện (cho admin)
+   * @param {Object} options - Tùy chọn: page, limit, adminId
+   * @returns {Promise<Object>} - Danh sách cuộc trò chuyện với phân trang
+   */
+  async getAllConversations(options = {}) {
+    try {
+      return await messageService.getAllConversationsForAdmin(options);
+    } catch (error) {
+      console.error('Error in getAllConversations:', error);
+      throw new Error(`Lỗi khi lấy danh sách cuộc trò chuyện: ${error.message}`);
+    }
+  }
+
+  /**
+   * Tìm kiếm tin nhắn (cho admin)
+   * @param {string} searchTerm - Từ khóa tìm kiếm
+   * @param {Object} options - Tùy chọn: page, limit
+   * @returns {Promise<Object>} - Kết quả tìm kiếm với phân trang
+   */
+  async searchMessages(searchTerm, options = {}) {
+    try {
+      return await messageService.searchMessagesForAdmin(searchTerm, options);
+    } catch (error) {
+      console.error('Error in searchMessages:', error);
+      throw new Error(`Lỗi khi tìm kiếm tin nhắn: ${error.message}`);
     }
   }
 }

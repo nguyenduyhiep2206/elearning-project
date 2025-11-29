@@ -26,9 +26,13 @@ import QuizResultPage from './pages/QuizResultPage'
 import PaymentResultPage from './pages/PaymentResultPage'
 import OrdersHistoryPage from './pages/OrdersHistoryPage'
 import MyCoursesPage from './pages/MyCoursesPage'
+import MyCertificatesPage from './pages/MyCertificatesPage'
+import MyNFTsPage from './pages/MyNFTsPage'
+import VerifyCertificatePage from './pages/VerifyCertificatePage'
+import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
-import Messages from './pages/admin/Messages'
+import AdminMessagesPage from './pages/admin/AdminMessagesPage'
 
 // Tạo QueryClient instance
 const queryClient = new QueryClient({
@@ -65,7 +69,7 @@ function App() {
             <Route path="promotions" element={<PromotionsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="users" element={<UsersPage />} />
-            <Route path="messages" element={<Messages />} />
+            <Route path="messages" element={<AdminMessagesPage />} />
           </Route>
           {/* Redirect /admin to /admin/dashboard */}
               <Route 
@@ -121,6 +125,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout><MyCoursesPage /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-certificates" 
+            element={
+              <ProtectedRoute>
+                <Layout><MyCertificatesPage /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-nfts" 
+            element={
+              <ProtectedRoute>
+                <Layout><MyNFTsPage /></Layout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/certificates/:certificateId" 
+            element={
+              <ProtectedRoute>
+                <Layout><VerifyCertificatePage /></Layout>
               </ProtectedRoute>
             } 
           />

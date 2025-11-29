@@ -94,4 +94,46 @@ router.put('/promotions/:id', verifyToken, requireAdmin, adminController.updateP
  */
 router.delete('/promotions/:id', verifyToken, requireAdmin, adminController.deletePromotion.bind(adminController));
 
+/**
+ * @route GET /api/v1/admin/messages
+ * @desc Lấy tất cả tin nhắn (cho admin)
+ * @access Private (Admin only)
+ */
+router.get('/messages', verifyToken, requireAdmin, adminController.getAllMessages.bind(adminController));
+
+/**
+ * @route GET /api/v1/admin/messages/stats
+ * @desc Lấy thống kê tin nhắn (cho admin)
+ * @access Private (Admin only)
+ */
+router.get('/messages/stats', verifyToken, requireAdmin, adminController.getMessageStats.bind(adminController));
+
+/**
+ * @route GET /api/v1/admin/messages/conversations
+ * @desc Lấy tất cả cuộc trò chuyện (cho admin)
+ * @access Private (Admin only)
+ */
+router.get('/messages/conversations', verifyToken, requireAdmin, adminController.getAllConversations.bind(adminController));
+
+/**
+ * @route GET /api/v1/admin/messages/search
+ * @desc Tìm kiếm tin nhắn (cho admin)
+ * @access Private (Admin only)
+ */
+router.get('/messages/search', verifyToken, requireAdmin, adminController.searchMessages.bind(adminController));
+
+/**
+ * @route DELETE /api/v1/admin/messages/:id
+ * @desc Xóa tin nhắn (cho admin)
+ * @access Private (Admin only)
+ */
+router.delete('/messages/:id', verifyToken, requireAdmin, adminController.deleteMessage.bind(adminController));
+
+/**
+ * @route DELETE /api/v1/admin/messages
+ * @desc Xóa nhiều tin nhắn (cho admin)
+ * @access Private (Admin only)
+ */
+router.delete('/messages', verifyToken, requireAdmin, adminController.deleteMultipleMessages.bind(adminController));
+
 module.exports = router;

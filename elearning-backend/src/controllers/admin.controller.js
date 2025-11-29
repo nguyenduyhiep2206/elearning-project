@@ -357,6 +357,136 @@ class AdminController {
       return ApiResponse.error(res, error.message, 500);
     }
   }
+
+  /**
+   * Lấy tất cả tin nhắn (cho admin)
+   * @route GET /api/v1/admin/messages
+   * @access Private (Admin only)
+   */
+  async getAllMessages(req, res) {
+    try {
+      const { page = 1, limit = 20, senderId, receiverId, search, startDate, endDate, seen } = req.query;
+      const result = await adminService.getAllMessages({
+        page,
+        limit,
+        senderId,
+        receiverId,
+        search,
+        startDate,
+        endDate,
+        seen
+      });
+      return ApiResponse.success(res, result, 'Lấy danh sách tin nhắn thành công');
+    } catch (error) {
+      console.error('Error in getAllMessages controller:', error);
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
+
+  /**
+   * Lấy thống kê tin nhắn (cho admin)
+   * @route GET /api/v1/admin/messages/stats
+   * @access Private (Admin only)
+   */
+  async getMessageStats(req, res) {
+    try {
+      const stats = await adminService.getMessageStats();
+      return ApiResponse.success(res, stats, 'Lấy thống kê tin nhắn thành công');
+    } catch (error) {
+      console.error('Error in getMessageStats controller:', error);
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
+
+  /**
+   * Xóa tin nhắn (cho admin)
+   * @route DELETE /api/v1/admin/messages/:id
+   * @access Private (Admin only)
+   */
+  async deleteMessage(req, res) {
+    try {
+      const { id } = req.params;
+      const messageId = parseInt(id);
+
+      if (isNaN(messageId)) {
+        return ApiResponse.error(res, 'ID tin nhắn không hợp lệ', 400);
+      }
+
+      const result = await adminService.deleteMessage(messageId);
+      return ApiResponse.success(res, result, 'Xóa tin nhắn thành công');
+    } catch (error) {
+      console.error('Error in deleteMessage controller:', error);
+      
+      if (error.message.includes('không tồn tại')) {
+        return ApiResponse.error(res, error.message, 404);
+      }
+
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
+
+  /**
+   * Xóa nhiều tin nhắn (cho admin)
+   * @route DELETE /api/v1/admin/messages
+   * @access Private (Admin only)
+   */
+  async deleteMultipleMessages(req, res) {
+    try {
+      const { messageIds } = req.body;
+
+      if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+        return ApiResponse.error(res, 'Danh sách ID tin nhắn không hợp lệ', 400);
+      }
+
+      const result = await adminService.deleteMultipleMessages(messageIds);
+      return ApiResponse.success(res, result, 'Xóa tin nhắn thành công');
+    } catch (error) {
+      console.error('Error in deleteMultipleMessages controller:', error);
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
+
+  /**
+   * Lấy tất cả cuộc trò chuyện (cho admin)
+   * @route GET /api/v1/admin/messages/conversations
+   * @access Private (Admin only)
+   */
+  async getAllConversations(req, res) {
+    try {
+      const { page = 1, limit = 20 } = req.query;
+      const adminId = req.user.id;
+      const result = await adminService.getAllConversations({
+        page,
+        limit,
+        adminId
+      });
+      return ApiResponse.success(res, result, 'Lấy danh sách cuộc trò chuyện thành công');
+    } catch (error) {
+      console.error('Error in getAllConversations controller:', error);
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
+
+  /**
+   * Tìm kiếm tin nhắn (cho admin)
+   * @route GET /api/v1/admin/messages/search
+   * @access Private (Admin only)
+   */
+  async searchMessages(req, res) {
+    try {
+      const { q, page = 1, limit = 20 } = req.query;
+
+      if (!q) {
+        return ApiResponse.error(res, 'Vui lòng nhập từ khóa tìm kiếm', 400);
+      }
+
+      const result = await adminService.searchMessages(q, { page, limit });
+      return ApiResponse.success(res, result, 'Tìm kiếm tin nhắn thành công');
+    } catch (error) {
+      console.error('Error in searchMessages controller:', error);
+      return ApiResponse.error(res, error.message, 500);
+    }
+  }
 }
 
 module.exports = new AdminController();

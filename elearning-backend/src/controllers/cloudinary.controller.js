@@ -1,6 +1,6 @@
 const cloudinaryService = require('../services/cloudinary.service');
 const learningService = require('../services/learning.service');
-const ApiResponse = require('../utils/ApiResponse');
+const ApiResponse = require('../utils/apiResponse');
 
 class CloudinaryController {
   /**

@@ -18,6 +18,9 @@ export const userService = {
   getCurrentUser: () => api.get('/auth/me'),
 
   loginWithGoogle:() => api.get('/auth/google'),
+
+  // Cập nhật wallet address (userId được lấy từ token, không cần truyền trong URL)
+  updateWalletAddress: (userId, walletAddress) => api.put('/users/wallet', { walletAddress }),
 };
 
 export const courseService = {
@@ -154,6 +157,25 @@ export const adminService = {
   
   // Xóa mã giảm giá
   deletePromotion: (promotionId) => api.delete(`/admin/promotions/${promotionId}`),
+
+  // Message Management
+  // Lấy tất cả tin nhắn (cho admin)
+  getAllMessages: (params) => api.get('/admin/messages', { params }),
+  
+  // Lấy thống kê tin nhắn (cho admin)
+  getMessageStats: () => api.get('/admin/messages/stats'),
+  
+  // Lấy tất cả cuộc trò chuyện (cho admin)
+  getAllConversations: (params) => api.get('/admin/messages/conversations', { params }),
+  
+  // Tìm kiếm tin nhắn (cho admin)
+  searchMessages: (query, params) => api.get('/admin/messages/search', { params: { q: query, ...params } }),
+  
+  // Xóa tin nhắn (cho admin)
+  deleteMessage: (messageId) => api.delete(`/admin/messages/${messageId}`),
+  
+  // Xóa nhiều tin nhắn (cho admin)
+  deleteMultipleMessages: (messageIds) => api.delete('/admin/messages', { data: { messageIds } }),
 };
 
 // Teacher API services
@@ -249,6 +271,66 @@ export const messagesServices={
   getChatUsers: () => api.get('/message'),
   markSeen: (data) => api.post('/message/seen', data),
 }
+
+// Certificate API services
+export const certificateService = {
+  // Lấy thông tin certificate theo ID
+  getCertificateById: (certificateId) => api.get(`/certificates/${certificateId}`),
+  
+  // Lấy danh sách certificates của sinh viên
+  getStudentCertificates: (studentId) => api.get(`/certificates/student/${studentId}`),
+  
+  // Lấy danh sách certificates của user hiện tại (tiện lợi hơn)
+  getMyCertificates: () => api.get('/certificates/my-certificates'),
+  
+  // Học viên tự phát hành chứng chỉ
+  studentMintCertificate: (certificateId) => api.post(`/certificates/${certificateId}/mint`),
+  
+  // Download PDF certificate
+  downloadPDF: async (certificateId) => {
+    const token = localStorage.getItem('token');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const url = `${apiUrl}/api/v1/certificates/${certificateId}/download`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download certificate');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    
+    // Lấy tên file từ response header hoặc tạo tên mặc định
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = `certificate-${certificateId}.pdf`;
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+    }
+    
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
+  
+  // Issue certificate (chỉ Admin)
+  issueCertificate: (data) => api.post('/certificates/issue', data),
+  
+  // Issue certificate (cho Teacher - chỉ cho khóa học của mình)
+  issueCertificateForTeacher: (data) => api.post('/certificates/issue-for-teacher', data),
+};
 
 // Export VNPAY service
 export { default as vnpayService } from './vnpay.service';

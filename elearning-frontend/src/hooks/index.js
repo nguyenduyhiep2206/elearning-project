@@ -110,3 +110,6 @@ export const useLocalStorage = (key, initialValue) => {
   
   return [storedValue, setValue];
 };
+
+// Export wallet hook
+export { useWallet } from './useWallet';

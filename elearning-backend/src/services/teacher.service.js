@@ -1,4 +1,4 @@
-const { courses, categories, users, orders, orderdetails, chapters, lessons } = require('../models');
+const { courses, categories, users, orders, orderdetails, chapters, lessons, coursecompletions } = require('../models');
 const { Op } = require('sequelize');
 const courseService = require('./course.service');
 
@@ -332,6 +332,14 @@ class TeacherService {
             attributes: ['userid', 'fullname', 'email', 'profilepicture'],
             required: true,
             where: userWhere,
+            include: [
+              {
+                model: require('../models').userdetails,
+                as: 'userdetails',
+                required: false,
+                attributes: ['walletaddress']
+              }
+            ]
           },
         ],
         order: [['createdat', 'DESC']],
@@ -349,6 +357,16 @@ class TeacherService {
           const key = `${userId}-${course.courseid}`;
 
           if (!studentMap.has(key)) {
+            // Lấy wallet address từ userdetails (có thể là array hoặc object)
+            let walletAddress = null;
+            if (user.userdetails) {
+              if (Array.isArray(user.userdetails) && user.userdetails.length > 0) {
+                walletAddress = user.userdetails[0].walletaddress;
+              } else if (user.userdetails.walletaddress) {
+                walletAddress = user.userdetails.walletaddress;
+              }
+            }
+            
             studentMap.set(key, {
               userId: user.userid,
               fullname: user.fullname,
@@ -359,12 +377,27 @@ class TeacherService {
               courseImage: course.imageurl,
               enrolledAt: order.createdat,
               orderId: order.orderid,
+              walletAddress: walletAddress,
             });
           }
         });
       });
 
+      // Kiểm tra completion status cho mỗi học viên
       const allStudents = Array.from(studentMap.values());
+      
+      // Thêm completion status cho mỗi học viên
+      for (const student of allStudents) {
+        const completion = await coursecompletions.findOne({
+          where: {
+            studentid: student.userId,
+            courseid: student.courseId
+          }
+        });
+        student.completionStatus = completion ? 'Completed' : 'In Progress';
+        student.completedAt = completion ? completion.completedat : null;
+      }
+
       const totalCount = allStudents.length;
       const totalPages = Math.ceil(totalCount / limit);
       const offset = (page - 1) * limit;

@@ -158,7 +158,7 @@ exports.getUserDetails = async (userId) => {
             include: [
                 {
                     model: UserDetailsModel,
-                    as: 'details' 
+                    as: 'userdetails' 
                 }
             ],
             attributes: { 
@@ -172,12 +172,66 @@ exports.getUserDetails = async (userId) => {
 
         const userData = {
             ...user.toJSON(),
-            details: user.details ? user.details.toJSON() : null
+            userdetails: user.userdetails ? (Array.isArray(user.userdetails) ? user.userdetails : [user.userdetails]) : []
         };
 
         return userData;
     } catch (error) {
         throw new Error(`Lỗi khi lấy chi tiết người dùng: ${error.message}`);
+    }
+};
+
+exports.updateWalletAddress = async (userId, walletAddress) => {
+    try {
+        const user = await UserModel.findByPk(userId);
+        if (!user) {
+            throw new Error('Người dùng không tồn tại.');
+        }
+
+        // Kiểm tra xem wallet address đã được sử dụng bởi user khác chưa
+        const existingDetails = await UserDetailsModel.findOne({
+            where: {
+                walletaddress: walletAddress
+            }
+        });
+
+        if (existingDetails) {
+            // Nếu wallet đã được sử dụng bởi user khác, từ chối
+            if (existingDetails.userid !== parseInt(userId)) {
+                throw new Error('Địa chỉ ví này đã được sử dụng bởi tài khoản khác. Mỗi địa chỉ ví chỉ có thể được liên kết với một tài khoản để đảm bảo tính duy nhất của chứng chỉ.');
+            }
+            // Nếu wallet đã được sử dụng bởi chính user này, cho phép cập nhật (có thể là cập nhật lại thông tin)
+        }
+
+        // Tìm hoặc tạo UserDetails
+        let details = await UserDetailsModel.findOne({ where: { userid: userId } });
+        if (!details) {
+            details = await UserDetailsModel.create({ userid: userId });
+        }
+
+        // Cập nhật wallet address
+        await details.update({ walletaddress: walletAddress });
+
+        // Lấy lại thông tin user với details
+        const updatedUser = await UserModel.findOne({
+            where: { userid: userId },
+            include: [
+                {
+                    model: UserDetailsModel,
+                    as: 'userdetails'
+                }
+            ],
+            attributes: { exclude: ['passwordhash'] }
+        });
+
+        return updatedUser.toJSON();
+    } catch (error) {
+        // Nếu lỗi đã có message rõ ràng, throw trực tiếp
+        // Nếu không, wrap với message chung
+        if (error.message && !error.message.includes('Lỗi khi cập nhật wallet address')) {
+            throw error;
+        }
+        throw new Error(`Lỗi khi cập nhật wallet address: ${error.message}`);
     }
 };
 

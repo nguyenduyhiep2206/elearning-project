@@ -27,6 +27,14 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: Sequelize.Sequelize.literal('CURRENT_TIMESTAMP')
+    },
+    transactionhash: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    tokenid: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     }
   }, {
     sequelize,

@@ -55,17 +55,25 @@ class CourseService {
   // Lấy khóa học theo ID
   async getCourseById(courseId) {
     try {
-      const course = await courses.findByPk(courseId, {
+      // Convert courseId sang integer và validate
+      const id = parseInt(courseId);
+      if (isNaN(id) || id <= 0) {
+        throw new Error('ID khóa học không hợp lệ');
+      }
+
+      const course = await courses.findByPk(id, {
         include: [
           {
             model: categories,
             as: 'category',
-            attributes: ['categoryid', 'categoryname']
+            attributes: ['categoryid', 'categoryname'],
+            required: false
           },
           {
             model: users,
             as: 'teacher',
-            attributes: ['userid', 'fullname', 'email']
+            attributes: ['userid', 'fullname', 'email'],
+            required: false
           },
           {
             model: chapters,
@@ -102,6 +110,10 @@ class CourseService {
       return courseData;
     } catch (error) {
       console.error('Error in getCourseById:', error);
+      // Nếu đã là Error object với message, throw lại
+      if (error.message && (error.message.includes('Không tìm thấy') || error.message.includes('không hợp lệ'))) {
+        throw error;
+      }
       throw new Error(`Lỗi khi lấy khóa học: ${error.message}`);
     }
   }
@@ -298,55 +310,4 @@ class CourseService {
   }
 }
 
-// Lấy tất cả khóa học (bao gồm giảng viên và danh mục)
-exports.getAllCourses = async () => {
-  return await courses.findAll({
-    include: [
-      { model: users, as: 'teacher', attributes: ['userid', 'fullname', 'email'] },
-      { model: categories, as: 'category' }
-    ]
-  });
-};
-
-// Lấy 1 khóa học (bao gồm tất cả chương, bài học, giảng viên, danh mục)
-exports.getCourseById = async (courseId) => {
-  return await courses.findByPk(courseId, {
-    include: [
-      { model: users, as: 'teacher', attributes: ['userid', 'fullname'] },
-      { model: categories, as: 'category' },
-      {
-        model: chapters,
-        as: 'chapters',
-        include: [{ 
-          model: lessons, 
-          as: 'lessons',
-          attributes: ['lessonid', 'title', 'sortorder'] // Chỉ lấy thông tin cần thiết
-        }]
-      }
-    ],
-    order: [
-      [chapters, 'sortorder', 'ASC'], // Sắp xếp chương
-      [chapters, lessons, 'sortorder', 'ASC'] // Sắp xếp bài học
-    ]
-  });
-};
-
-// Tạo khóa học mới
-exports.createCourse = async (courseData) => {
-  // courseData sẽ là req.body
-  return await courses.create(courseData);
-};
-
-// Cập nhật khóa học
-exports.updateCourse = async (courseId, courseData) => {
-  const course = await courses.findByPk(courseId);
-  if (!course) throw new Error('Course not found');
-  return await course.update(courseData);
-};
-
-// Xóa khóa học
-exports.deleteCourse = async (courseId) => {
-  const course = await courses.findByPk(courseId);
-  if (!course) throw new Error('Course not found');
-  return await course.destroy();
-};
+module.exports = new CourseService();

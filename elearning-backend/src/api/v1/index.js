@@ -20,6 +20,8 @@ const learningRoutes = require('./learning.route'); // Import learning route
 const cloudinaryRoutes = require('./cloudinary.route'); // Import cloudinary route
 const paymentRoutes = require('./payment.route'); // Import payment route
 const vnpayRoutes = require('./vnpay.route'); // Import vnpay route (tương thích ngược)
+const certificateRoutes = require('./certificate.route'); // Import certificate route
+const userRoutes = require('./user.route'); // Import user route
 
 
 router.use('/auth', authRoutes);
@@ -42,6 +44,8 @@ router.use('/learning', learningRoutes); // Sử dụng learning route với ti�
 router.use('/cloudinary', cloudinaryRoutes); // Sử dụng cloudinary route với tiền tố '/cloudinary'
 router.use('/payment', paymentRoutes); // Sử dụng payment route với tiền tố '/payment'
 router.use('/vnpay', vnpayRoutes); // Sử dụng vnpay route với tiền tố '/vnpay' (tương thích ngược)
+router.use('/certificates', certificateRoutes); // Sử dụng certificate route với tiền tố '/certificates'
+router.use('/users', userRoutes); // Sử dụng user route với tiền tố '/users'
 
 module.exports = router;
 
