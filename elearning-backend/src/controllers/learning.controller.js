@@ -1,5 +1,5 @@
 const learningService = require('../services/learning.service');
-const ApiResponse = require('../utils/ApiResponse');
+const ApiResponse = require('../utils/apiResponse');
 
 class LearningController {
   /**
