@@ -79,15 +79,10 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); 
     
-    console.log('🚀 Bắt đầu đăng nhập...');
-
     clearError();
 
     try {
-      console.log('📤 Gửi request đăng nhập...');
       const response = await login({ email, password });
-      
-      console.log('✅ Đăng nhập thành công!');
       
       const userRole = response?.user?.role?.toLowerCase();
       if (userRole === 'admin') {
@@ -98,7 +93,7 @@ const LoginPage = () => {
         navigate('/');
       }
     } catch (error) {
-      console.log('❌ Đăng nhập thất bại:', error.message);
+      // Có thể hiển thị thông báo lỗi qua UI, không cần log ra console
     }
   };
 

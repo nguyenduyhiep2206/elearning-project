@@ -112,15 +112,15 @@ exports.deleteUser = async (id) => {
 };
 
 exports.uploadProfileImage = async (userId, file) => {
-  try {
-    const user = await UserModel.findByPk(userId);
-    if (!user) {
-      throw new Error('Người dùng không tồn tại.');
-    }
+    try {
+        const user = await UserModel.findByPk(userId);
+        if (!user) {
+            throw new Error('Người dùng không tồn tại.');
+        }
 
     if (!file || (!file.path && !file.buffer)) {
       throw new Error('File ảnh không hợp lệ.');
-    }
+        }
 
     // Upload lên Cloudinary (sử dụng file.path do multer lưu sẵn)
     const uploadResult = await cloudinary.uploader.upload(file.path || '', {
@@ -132,7 +132,7 @@ exports.uploadProfileImage = async (userId, file) => {
     const imageUrl = uploadResult.secure_url || uploadResult.url;
     if (!imageUrl) {
       throw new Error('Không lấy được URL ảnh từ Cloudinary.');
-    }
+        }
 
     // Cập nhật ảnh đại diện trên bảng users (profilepicture)
     user.profilepicture = imageUrl;
@@ -141,15 +141,15 @@ exports.uploadProfileImage = async (userId, file) => {
     // Xóa file local nếu tồn tại để tránh đầy ổ đĩa
     if (file.path && fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
-    }
+            }
 
     return {
       message: 'Upload ảnh profile thành công.',
       profileImage: imageUrl,
     };
-  } catch (error) {
-    throw new Error(`Lỗi khi upload ảnh: ${error.message}`);
-  }
+    } catch (error) {
+        throw new Error(`Lỗi khi upload ảnh: ${error.message}`);
+    }
 };
 
 exports.getUserDetails = async (userId) => {

@@ -288,13 +288,13 @@ const Header = () => {
                     onClick={() => setIsNotifOpen((prev) => !prev)}
                     className="relative p-2 text-gray-700 hover:text-gray-900"
                   >
-                    <i className="fas fa-bell text-lg"></i>
+                  <i className="fas fa-bell text-lg"></i>
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
-                  </button>
+                </button>
 
                   {/* Notifications Dropdown */}
                   {isNotifOpen && (

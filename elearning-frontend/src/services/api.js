@@ -15,19 +15,6 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      // Chỉ warning nếu không phải là request đến public endpoints
-      const publicEndpoints = [
-        '/auth/login', 
-        '/auth/register',
-        '/reviews/', // Xem đánh giá là public
-        '/courses', // Xem danh sách khóa học là public
-      ];
-      const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
-      
-      if (!isPublicEndpoint) {
-        console.warn('⚠️ Không tìm thấy token trong localStorage cho request:', config.method, config.url);
-      }
     }
     return config;
   },

@@ -141,7 +141,7 @@ function App() {
               <ProtectedRoute>
                 <NotificationsPage />
               </ProtectedRoute>
-            }
+            } 
           />
           <Route 
             path="/my-courses" 

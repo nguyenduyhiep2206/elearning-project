@@ -108,19 +108,19 @@ const logout = async (req, res, next) => {
 };
 
 const verifyAuth = async (req, res, next) => {
-  try {
+    try {
     const token =
       req.headers.authorization?.replace('Bearer ', '') ||
       req.cookies.authToken;
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Token không được cung cấp',
-      });
-    }
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token không được cung cấp',
+            });
+        }
 
-    const decoded = await authService.verifyToken(token);
+        const decoded = await authService.verifyToken(token);
 
     // Lấy đầy đủ thông tin user từ database để có id và profilepicture
     const user = await users.findByPk(decoded.userId, {
@@ -134,9 +134,9 @@ const verifyAuth = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Token hợp lệ',
+        res.status(200).json({
+            success: true,
+            message: 'Token hợp lệ',
       data: {
         user: {
           id: user.userid,
@@ -147,13 +147,13 @@ const verifyAuth = async (req, res, next) => {
           createdAt: user.createdat,
         },
       },
-    });
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: error.message || 'Token không hợp lệ',
-    });
-  }
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            message: error.message || 'Token không hợp lệ',
+        });
+    }
 };
 
 

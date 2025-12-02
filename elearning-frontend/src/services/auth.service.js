@@ -5,7 +5,6 @@ class AuthService {
 
   async login(credentials) {
     try {
-      console.log('🌐 AuthService: POST /auth/login', credentials);
       const res = await api.post('/auth/login', credentials);
       return {
         success: true,
@@ -16,7 +15,6 @@ class AuthService {
         message: res.data.message,
       };
     } catch (error) {
-      console.error('💥 AuthService: Lỗi đăng nhập:', error.response?.data);
       const msg = error.response?.data?.message || 'Đăng nhập thất bại';
       throw new Error(msg);
     }
