@@ -145,7 +145,7 @@ const register = async (fullName, email, password) => {
             fullname: fullName.trim(),
             email: email.toLowerCase().trim(),
             passwordhash: hashedPassword,
-            role: 'Student', // Lowercase để phù hợp với ENUM
+            role: 'Student', // PascalCase để phù hợp với database
             provider: 'local'
         });
 
@@ -203,7 +203,7 @@ const loginWithGoogle = async (googleProfile) => {
       fullname: displayName,
       email: email.toLowerCase().trim(),
       passwordhash: null,
-      role: "Student", // Lowercase để phù hợp với ENUM
+      role: "Student", // PascalCase để phù hợp với database
       provider: "google",
       googleid: googleProfile.id?.toString() || null,
       profilepicture: googleProfile.photos?.[0]?.value || null,

@@ -21,7 +21,17 @@ const LoginPage = () => {
 
   useEffect(() => {
     const token = query.get("token");
+    const error = query.get("error");
     const justRegistered = query.get("registered") === "1";
+
+    if (error) {
+      setNotification({
+        show: true,
+        message: decodeURIComponent(error),
+        type: 'error'
+      });
+      return;
+    }
 
     if (justRegistered) {
       setNotification({
@@ -31,28 +41,38 @@ const LoginPage = () => {
       });
     }
 
-  if (token) {
-    localStorage.setItem("token", token);
+    if (token) {
+      localStorage.setItem("token", token);
 
-    const fetchUser = async () => {
-      try {
-        const response = await AuthService.getCurrentUser(token); 
-        const userObj = response.data.user || response.data; // Xử lý cả hai format
+      const fetchUser = async () => {
+        try {
+          // Sử dụng verifyToken thay vì getCurrentUser vì nó phù hợp hơn
+          const response = await AuthService.verifyToken(); 
+          const userObj = response.data?.user || response.data; // Xử lý cả hai format
 
-        localStorage.setItem("user", JSON.stringify(userObj));
+          if (userObj) {
+            localStorage.setItem("user", JSON.stringify(userObj));
 
-        // Reload page để cập nhật auth context
-        window.location.href = '/';
-      } catch (err) {
-        console.error("Lấy thông tin user thất bại:", err);
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      }
-    };
+            // Reload page để cập nhật auth context
+            window.location.href = '/';
+          } else {
+            throw new Error("Không thể lấy thông tin user");
+          }
+        } catch (err) {
+          console.error("Lấy thông tin user thất bại:", err);
+          setNotification({
+            show: true,
+            message: 'Đăng nhập thất bại. Vui lòng thử lại.',
+            type: 'error'
+          });
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        }
+      };
 
-    fetchUser();
-  }
-}, [query, navigate]);
+      fetchUser();
+    }
+  }, [query, navigate]);
 
 
   useEffect(() => {

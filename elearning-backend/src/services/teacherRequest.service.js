@@ -39,7 +39,7 @@ class TeacherRequestService {
         throw new Error('Người dùng không tồn tại');
       }
 
-      if (user.role === 'teacher') {
+      if (user.role === 'Teacher') {
         throw new Error('Bạn đã là giảng viên rồi');
       }
 
@@ -63,7 +63,7 @@ class TeacherRequestService {
 
       // Gửi thông báo cho admin (tìm admin users)
       const adminUsers = await users.findAll({
-        where: { role: 'admin' }
+        where: { role: 'Admin' }
       });
 
       for (const admin of adminUsers) {
