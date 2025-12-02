@@ -12,9 +12,7 @@ useEffect(() => {
   setCurrentUser(stored.user || null);
 }, []);
 
-  // State cho carousel
   const navigate = useNavigate();
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [activeFilter, setActiveFilter] = useState('Tất cả');
   const categoryScrollRef = useRef(null);
 
@@ -23,43 +21,6 @@ useEffect(() => {
     queryKey: ['categories'],
     queryFn: categoryService.getAllCategories,
   });
-
-  // Dữ liệu carousel slides
-  const slides = [
-    {
-      headline: 'Học điều mới mỗi ngày.',
-      subheadline: 'Trở thành chuyên gia và sẵn sàng tham gia thế giới.',
-      cta: 'Khám phá Nhiếp ảnh',
-      bgColor: 'bg-teal-500',
-      image: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500&h=400&fit=crop',
-      instructor: {
-        name: 'Jessica Wang | Nhiếp ảnh gia',
-        award: 'Giải thưởng Ảnh 2017 | Tham gia từ năm 2006'
-      }
-    },
-    {
-      headline: 'Thành thạo Phát triển Web',
-      subheadline: 'Xây dựng website và ứng dụng tuyệt đẹp với công cụ hiện đại.',
-      cta: 'Bắt đầu Học',
-      bgColor: 'bg-purple-500',
-      image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=400&fit=crop',
-      instructor: {
-        name: 'John Smith | Lập trình viên',
-        award: 'Full Stack Developer cao cấp | Hơn 10 năm kinh nghiệm'
-      }
-    },
-    {
-      headline: 'Thiết kế Tương lai của Bạn',
-      subheadline: 'Tạo ra những thiết kế đẹp mắt mà người dùng sẽ yêu thích.',
-      cta: 'Khám phá Thiết kế',
-      bgColor: 'bg-blue-500',
-      image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500&h=400&fit=crop',
-      instructor: {
-        name: 'Sarah Johnson | Nhà thiết kế',
-        award: 'UI/UX Designer đoạt giải | Giám đốc Sáng tạo'
-      }
-    }
-  ];
 
   // Xử lý categories data
   const categories = categoriesData?.data?.data || categoriesData?.data || [];
@@ -91,16 +52,19 @@ useEffect(() => {
           id: c.courseid ?? c.id,
           title: c.coursename ?? c.title,
           instructor: c.teacher?.fullname || 'Giảng viên chưa xác định',
+          categoryName: c.category?.categoryname || '',
           price: c.price != null ? `${Number(c.price).toLocaleString('vi-VN')}đ` : '0đ',
           originalPrice: c.price != null ? `${(Number(c.price) * 1.2).toLocaleString('vi-VN')}đ` : '',
           image: c.imageurl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop&crop=face',
-          tag: 'Bán chạy nhất',
-          rating: 5,
-          reviews: 0,
+          rating: typeof c.averageRating === 'number' ? Number(c.averageRating) : 0,
+          reviews: typeof c.reviewCount === 'number' ? c.reviewCount : 0,
         });
 
         const popular = (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || []).map(normalizeCourse);
-        const latest = (Array.isArray(latestPayload) ? latestPayload : latestPayload?.courses || []).map(normalizeCourse);
+        const latest = (Array.isArray(latestPayload) ? latestPayload : latestPayload?.courses || [])
+          .map(normalizeCourse)
+          // Sắp xếp khóa học thịnh hành theo số sao (rating) từ cao xuống thấp
+          .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
 
         setCourses(popular);
         setTrendingCourses(latest);
@@ -110,12 +74,13 @@ useEffect(() => {
         for (const c of (Array.isArray(popularPayload) ? popularPayload : popularPayload?.courses || [])) {
           const id = c.teacher?.userid;
           const name = c.teacher?.fullname;
+          const avatar = c.teacher?.profilepicture;
           if (id && name && !teacherMap.has(id)) {
             teacherMap.set(id, {
               id,
               name,
               profession: 'Giảng viên',
-              image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face'
+              image: avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=200&fit=crop&crop=face'
             });
           }
         }
@@ -128,19 +93,6 @@ useEffect(() => {
     };
     loadData();
   }, []);
-
-  // Functions
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const goToSlide = (index) => {
-    setCurrentSlide(index);
-  };
 
   // Functions cho category scroll
   const scrollCategories = (direction) => {
@@ -156,65 +108,52 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative h-[450px] rounded-2xl overflow-hidden max-w-7xl mx-auto shadow-2xl">
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 flex items-center justify-between p-10 transition-opacity duration-700 ${slide.bgColor} ${
-              currentSlide === index ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div className="flex-1 text-white z-10">
-              <h1 className="text-5xl font-bold mb-5 leading-tight">
-                {slide.headline}
+      {/* Hero Section với Video Background */}
+      <div className="relative h-[600px] rounded-2xl overflow-hidden max-w-7xl mx-auto shadow-2xl">
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="https://res.cloudinary.com/dhd3gr6dp/video/upload/v1764660506/dgsx972mwxome7eknd6u.mp4" type="video/mp4" />
+          {/* Fallback image nếu video không load được */}
+          <img
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&h=1080&fit=crop"
+            alt="Education background"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </video>
+
+        {/* Overlay gradient để text dễ đọc */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
+
+        {/* Content */}
+        <div className="relative z-10 h-full flex items-center px-10 md:px-16">
+          <div className="max-w-2xl text-white">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+              Học điều mới mỗi ngày
               </h1>
-              <p className="text-lg mb-8 opacity-90">
-                {slide.subheadline}
-              </p>
-              <button className="px-8 py-4 bg-white text-teal-500 rounded-full font-semibold hover:bg-gray-100 transition-all duration-300">
-                {slide.cta}
+            <p className="text-xl md:text-2xl mb-8 opacity-90 leading-relaxed">
+              Trở thành chuyên gia và sẵn sàng tham gia thế giới với hàng nghìn khóa học chất lượng cao
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => navigate('/search')}
+                className="px-8 py-4 bg-teal-500 text-white rounded-full font-semibold hover:bg-teal-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              >
+                Khám phá Khóa học
+              </button>
+              <button
+                onClick={() => navigate('/search')}
+                className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-full font-semibold hover:bg-white/20 transition-all duration-300"
+              >
+                Tìm kiếm
               </button>
             </div>
-            <div className="flex-1 h-full relative flex items-end p-10">
-              <img 
-                src={slide.image} 
-                alt={slide.headline} 
-                className="absolute inset-0 w-full h-full object-cover" 
-              />
-              <div className="bg-black bg-opacity-70 p-5 rounded-lg text-white z-10">
-                <div className="text-lg font-bold mb-1">{slide.instructor.name}</div>
-                <div className="text-sm opacity-80">{slide.instructor.award}</div>
-              </div>
-            </div>
           </div>
-        ))}
-
-        {/* Navigation Arrows */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-5 top-1/2 -translate-y-1/2 z-20 bg-white bg-opacity-80 hover:bg-white rounded-full p-2 transition-all duration-300"
-        >
-          <i className="fas fa-chevron-left text-gray-800 text-lg"></i>
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-5 top-1/2 -translate-y-1/2 z-20 bg-white bg-opacity-80 hover:bg-white rounded-full p-2 transition-all duration-300"
-        >
-          <i className="fas fa-chevron-right text-gray-800 text-lg"></i>
-        </button>
-
-        {/* Slide Indicators */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                currentSlide === index ? 'bg-white' : 'bg-white bg-opacity-50'
-              }`  }
-            />
-          ))}
         </div>
       </div>
 
@@ -252,46 +191,86 @@ useEffect(() => {
               msOverflowStyle: 'none',
             }}
           >
-            {allCategories.map((category) => (
+            {allCategories.map((category) => {
+              const isAll = category.id === 'all';
+              const label = isAll ? 'Tất cả' : category.name;
+
+              const handleClick = () => {
+                setActiveFilter(label);
+                // Điều hướng sang trang tìm kiếm với category tương ứng
+                const params = new URLSearchParams();
+                // Dùng label làm từ khóa để vẫn có kết quả tìm kiếm
+                params.set('q', label);
+                if (!isAll) {
+                  params.set('category', category.id);
+                }
+                navigate(`/search?${params.toString()}`);
+              };
+
+              return (
             <button
               key={category.id}
-                onClick={() => setActiveFilter(category.id === 'all' ? 'Tất cả' : category.name)}
+                  onClick={handleClick}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
-                  activeFilter === (category.id === 'all' ? 'Tất cả' : category.name)
+                    activeFilter === label
                   ? 'bg-teal-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {category.name}
             </button>
-          ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* More from Kitani Studio Section */}
-      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">Khóa học nổi bật</h2>
-        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
+      {/* Featured Courses Section */}
+      <div className="py-12 px-5 max-w-6xl mx-auto mt-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-3xl font-bold mb-2 text-gray-900">Khóa học nổi bật</h2>
+            <p className="text-gray-600">
+              Lựa chọn những khóa học được nhiều học viên yêu thích và đánh giá cao.
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {courses.map((course) => (
-            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
+          {courses.map((course) => {
+            const rating = Number(course.rating || 0);
+            const roundedRating = Math.round(rating);
+            return (
+              <div
+                key={course.id}
+                onClick={() => navigate(`/courses/${course.id}`)}
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+              >
               <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
               <div className="p-5">
-                <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
-                  {course.tag}
-                </div>
+                  {course.categoryName && (
+                    <span className="inline-block mb-3 px-3 py-1 text-xs font-semibold rounded-full bg-teal-50 text-teal-700">
+                      {course.categoryName}
+                    </span>
+                  )}
                 <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
                 <p className="text-gray-600 mb-2">bởi {course.instructor}</p>
-                <div className="flex items-center gap-1 mb-4">
-                  <div className="flex text-yellow-400">
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <i
+                          key={index}
+                          className={`fas fa-star text-sm ${
+                            index < roundedRating ? 'text-yellow-400' : 'text-gray-300'
+                          }`}
+                        ></i>
+                      ))}
+                      <span className="ml-2 text-sm font-medium text-gray-800">
+                        {rating > 0 ? rating.toFixed(1) : '0.0'}
+                      </span>
                   </div>
-                  <span className="text-gray-600 text-sm">({course.reviews})</span>
+                    <span className="text-gray-500 text-sm">
+                      ({course.reviews || 0} đánh giá)
+                    </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-gray-900">{course.price}</span>
@@ -299,48 +278,94 @@ useEffect(() => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Trending Course Section */}
-      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">Khóa học đang thịnh hành</h2>
-        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {trendingCourses.map((course) => (
-            <div key={course.id} onClick={() => navigate(`/courses/${course.id}`)} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
-              <img src={course.image} alt={course.title} className="w-full h-48 object-cover" />
-              <div className="p-5">
-                <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-4">
-                  {course.tag}
+      {/* Trending Course Section (Horizontal Slider) */}
+      <div className="py-12 px-5 max-w-6xl mx-auto mt-2">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-3xl font-bold mb-2 text-gray-900">Khóa học đang thịnh hành</h2>
+            <p className="text-gray-600">
+              Những khóa học mới, được nhiều học viên xem và đăng ký gần đây.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div
+            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {trendingCourses.map((course, index) => {
+              const rating = Number(course.rating || 0);
+              const roundedRating = Math.round(rating);
+              return (
+                <div
+                  key={course.id}
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                  className="min-w-[260px] max-w-[280px] bg-gradient-to-b from-white to-gray-50 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 scroll-snap-align-start border border-gray-100"
+                >
+                  <div className="relative h-40">
+                    <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                    <div className="absolute top-2 left-2 px-3 py-1 rounded-full bg-rose-500 text-white text-xs font-semibold shadow">
+                      TOP {index + 1}
                 </div>
-                <h3 className="text-lg font-bold mb-2 text-gray-900">{course.title}</h3>
-                <p className="text-gray-600 mb-2">bởi {course.instructor}</p>
-                <div className="flex items-center gap-1 mb-4">
-                  <div className="flex text-yellow-400">
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
-                    <i className="fas fa-star"></i>
+                    {course.categoryName && (
+                      <span className="absolute bottom-2 left-2 inline-block px-2 py-1 text-[11px] font-semibold rounded-full bg-black/60 text-white backdrop-blur-sm">
+                        {course.categoryName}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-gray-600 text-sm">({course.reviews})</span>
+                  <div className="p-4">
+                    <h3 className="text-base font-bold mb-1 text-gray-900 line-clamp-2">
+                      {course.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-2 line-clamp-1">bởi {course.instructor}</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <i
+                            key={i}
+                            className={`fas fa-star text-xs ${
+                              i < roundedRating ? 'text-yellow-400' : 'text-gray-300'
+                            }`}
+                          ></i>
+                        ))}
+                        <span className="ml-1 text-xs font-medium text-gray-800">
+                          {rating > 0 ? rating.toFixed(1) : '0.0'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        ({course.reviews || 0} đánh giá)
+                      </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-gray-900">{course.price}</span>
-                  <span className="text-gray-500 line-through">{course.originalPrice}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-teal-600">{course.price}</span>
+                      {course.originalPrice && (
+                        <span className="text-xs text-gray-400 line-through">{course.originalPrice}</span>
+                      )}
                 </div>
               </div>
             </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Popular Instructor Section */}
-      <div className="py-15 px-5 max-w-6xl mx-auto mt-4">
-        <h2 className="text-4xl font-bold mb-3 text-gray-900">Giảng viên nổi tiếng</h2>
-        <p className="text-gray-600 mb-10">Chúng tôi biết những gì tốt nhất cho bạn. Lựa chọn hàng đầu dành cho bạn.</p>
+      <div className="py-12 px-5 max-w-6xl mx-auto mt-2">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-3xl font-bold mb-2 text-gray-900">Giảng viên nổi tiếng</h2>
+            <p className="text-gray-600">
+              Gặp gỡ những giảng viên được yêu thích nhất, giàu kinh nghiệm và tận tâm.
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {instructors.map((instructor) => (
             <div key={instructor.id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1">
@@ -351,29 +376,6 @@ useEffect(() => {
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="bg-gradient-to-br from-blue-600 to-blue-500 py-20 px-5 text-center text-white relative overflow-hidden mt-4">
-        <div className="absolute right-0 top-0 w-80 h-full opacity-30" 
-             style={{
-               backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
-             }}>
-        </div>
-        <h2 className="text-4xl font-bold mb-5">Tham gia và nhận ưu đãi tuyệt vời.</h2>
-        <p className="text-lg mb-10 opacity-90">
-          Với giao diện responsive và ứng dụng di động, máy tính.
-        </p>
-        <div className="flex justify-center gap-4 max-w-md mx-auto">
-          <input 
-            type="email" 
-            placeholder="Địa chỉ Email" 
-            className="flex-1 px-5 py-4 rounded-full border-none text-gray-900 outline-none"
-          />
-          <button className="px-8 py-4 bg-teal-500 text-white rounded-full font-semibold hover:bg-teal-600 transition-all duration-300">
-            Đăng ký
-          </button>
         </div>
       </div>
 {currentUser && <UserChatModal user={currentUser} />}

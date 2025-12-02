@@ -57,7 +57,7 @@ const PaymentResultPage = () => {
                 )}
                 <div className="space-y-3">
                   <button
-                    onClick={() => navigate('/courses')}
+                    onClick={() => navigate('/my-courses')}
                     className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors"
                   >
                     Xem khóa học của tôi

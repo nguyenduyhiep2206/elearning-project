@@ -27,12 +27,16 @@ import PaymentResultPage from './pages/PaymentResultPage'
 import OrdersHistoryPage from './pages/OrdersHistoryPage'
 import MyCoursesPage from './pages/MyCoursesPage'
 import MyCertificatesPage from './pages/MyCertificatesPage'
-import MyNFTsPage from './pages/MyNFTsPage'
 import VerifyCertificatePage from './pages/VerifyCertificatePage'
 import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import AdminMessagesPage from './pages/admin/AdminMessagesPage'
+import CertificatesPage from './pages/admin/CertificatesPage'
+import TeacherRequestsPage from './pages/admin/TeacherRequestsPage'
+import BecomeTeacherPage from './pages/BecomeTeacherPage'
+import SearchPage from './pages/SearchPage'
+import NotificationsPage from './pages/NotificationsPage'
 
 // Tạo QueryClient instance
 const queryClient = new QueryClient({
@@ -70,6 +74,8 @@ function App() {
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="messages" element={<AdminMessagesPage />} />
+            <Route path="certificates" element={<CertificatesPage />} />
+            <Route path="teacher-requests" element={<TeacherRequestsPage />} />
           </Route>
           {/* Redirect /admin to /admin/dashboard */}
               <Route 
@@ -83,8 +89,17 @@ function App() {
           
           {/* Other routes - With Header/Footer */}
           <Route path="/" element={<Layout><HomePage /></Layout>} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<Layout><LoginPage /></Layout>} />
           <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
+          <Route 
+            path="/become-teacher" 
+            element={
+              <ProtectedRoute>
+                <Layout><BecomeTeacherPage /></Layout>
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/courses/:id" element={<Layout><CourseDetailPage /></Layout>} />
           <Route 
             path="/courses/:id/learn" 
@@ -120,6 +135,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route 
             path="/my-courses" 
             element={
@@ -141,14 +164,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout><MyCertificatesPage /></Layout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/my-nfts" 
-            element={
-              <ProtectedRoute>
-                <Layout><MyNFTsPage /></Layout>
               </ProtectedRoute>
             } 
           />

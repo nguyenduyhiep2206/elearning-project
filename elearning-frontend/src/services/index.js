@@ -21,6 +21,32 @@ export const userService = {
 
   // Cập nhật wallet address (userId được lấy từ token, không cần truyền trong URL)
   updateWalletAddress: (userId, walletAddress) => api.put('/users/wallet', { walletAddress }),
+
+  // Upload ảnh đại diện tài khoản
+  uploadProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append('profileImage', file);
+    return api.post('/users/profile-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
+// Notification services
+export const notificationService = {
+  // Lấy notifications của user hiện tại
+  getMyNotifications: (page = 1, limit = 10, readStatus = null) =>
+    api.get('/notification', {
+      params: {
+        page,
+        limit,
+        ...(readStatus !== null ? { readStatus } : {}),
+      },
+    }),
+
+  // Đánh dấu đã đọc / chưa đọc
+  updateReadStatus: (ids, isRead = true) =>
+    api.put('/notification/read-status', { ids, isRead }),
 };
 
 export const courseService = {
@@ -41,8 +67,9 @@ export const courseService = {
   // Lấy đánh giá của khóa học
   getCourseReviews: (courseId) => api.get(`/reviews/${courseId}`),
   
-  // Tìm kiếm courses
-  searchCourses: (query) => api.get(`/courses/search?q=${query}`),
+  // Tìm kiếm courses với pagination
+  searchCourses: (query, page = 1, limit = 12) => 
+    api.get(`/courses/search`, { params: { q: query, page, limit } }),
 };
 
 // Review API services
@@ -330,6 +357,33 @@ export const certificateService = {
   
   // Issue certificate (cho Teacher - chỉ cho khóa học của mình)
   issueCertificateForTeacher: (data) => api.post('/certificates/issue-for-teacher', data),
+  
+  // Lấy tất cả certificates (chỉ Admin)
+  getAllCertificates: (params) => api.get('/certificates/all', { params }),
+};
+
+// Teacher Request API services
+export const teacherRequestService = {
+  // Tạo yêu cầu trở thành giảng viên
+  submitRequest: (data) => api.post('/teacher-requests', data),
+  
+  // Lấy yêu cầu của user hiện tại
+  getMyRequest: () => api.get('/teacher-requests/my-request'),
+  
+  // Lấy tất cả yêu cầu (chỉ admin)
+  getAllRequests: (params) => api.get('/teacher-requests', { params }),
+  
+  // Lấy yêu cầu theo ID (chỉ admin)
+  getRequestById: (requestId) => api.get(`/teacher-requests/${requestId}`),
+  
+  // Duyệt yêu cầu (chỉ admin)
+  approveRequest: (requestId) => api.post(`/teacher-requests/${requestId}/approve`),
+  
+  // Từ chối yêu cầu (chỉ admin)
+  rejectRequest: (requestId, rejectionReason) => api.post(`/teacher-requests/${requestId}/reject`, { rejectionReason }),
+  
+  // Lấy số lượng yêu cầu đang chờ duyệt (chỉ admin)
+  getPendingCount: () => api.get('/teacher-requests/pending/count'),
 };
 
 // Export VNPAY service

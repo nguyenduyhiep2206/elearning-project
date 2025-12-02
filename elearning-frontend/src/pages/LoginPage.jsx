@@ -6,15 +6,30 @@ import AuthService from '../services/auth.service';
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login, error, loading, clearError, isAuthenticated, user } = useAuth();
-const [query] = useSearchParams();
+  const [query] = useSearchParams();
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+
+  // Auto hide notification
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ ...notification, show: false });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
 
   useEffect(() => {
-  const token = query.get("token");
-  const justRegistered = query.get("registered") === "1";
+    const token = query.get("token");
+    const justRegistered = query.get("registered") === "1";
 
-  if (justRegistered) {
-    alert("Đăng ký Google thành công, hãy đăng nhập!");
-  }
+    if (justRegistered) {
+      setNotification({
+        show: true,
+        message: 'Đăng ký Google thành công! Bạn đã được đăng nhập tự động.',
+        type: 'success'
+      });
+    }
 
   if (token) {
     localStorage.setItem("token", token);
@@ -93,10 +108,47 @@ const [query] = useSearchParams();
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="bg-white py-8 px-6 md:shadow-lg md:border md:border-gray-200 md:rounded-lg md:px-8">
+    <>
+      {/* Success Notification */}
+      {notification.show && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
+          <div className={`rounded-lg shadow-2xl p-4 min-w-[320px] max-w-md transform transition-all ${
+            notification.type === 'success' 
+              ? 'bg-gradient-to-r from-green-500 to-green-600' 
+              : 'bg-gradient-to-r from-red-500 to-red-600'
+          } text-white`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {notification.type === 'success' ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm leading-relaxed">{notification.message}</p>
+              </div>
+              <button
+                onClick={() => setNotification({ ...notification, show: false })}
+                className="flex-shrink-0 text-white hover:text-gray-200 transition-colors ml-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen bg-gray-50">
+        <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md w-full space-y-8">
+            <div className="bg-white py-8 px-6 md:shadow-lg md:border md:border-gray-200 md:rounded-lg md:px-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Đăng nhập
@@ -168,11 +220,11 @@ const [query] = useSearchParams();
                     )}
                   </button>
                 </div>
-                <div className="text-right mt-1">
+                {/* <div className="text-right mt-1">
                   <a href="#" className="text-sm text-blue-600 hover:text-blue-800">
                     Quên mật khẩu?
                   </a>
-                </div>
+                </div> */}
               </div>
 
               <button
@@ -208,46 +260,12 @@ const [query] = useSearchParams();
                 </svg>
                 Tiếp tục với Google
               </button></a>
-              <button
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <svg className="w-5 h-5 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                Tiếp tục với Facebook
-              </button>
-
-              <button
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <svg className="w-5 h-5 mr-3 text-black" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                </svg>
-                Tiếp tục với Apple
-              </button>
             </div>
-          </div>
-
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              <a href="#" className="text-blue-600 hover:text-blue-800">Đăng ký thông qua tổ chức của bạn</a>
-            </p>
-            <div className="flex justify-center space-x-4 text-sm">
-              <a href="#" className="text-blue-600 hover:text-blue-800">Điều khoản sử dụng</a>
-              <a href="#" className="text-blue-600 hover:text-blue-800">Chính sách</a>
-              <a href="#" className="text-blue-600 hover:text-blue-800">Trợ giúp</a>
-            </div>
-            <p className="text-xs text-gray-500 mt-4">
-              Bằng cách đăng nhập, bạn đồng ý với
-              <a href="#" className="text-blue-600 hover:text-blue-800">Điều khoản dịch vụ</a>
-              và
-              <a href="#" className="text-blue-600 hover:text-blue-800">Chính sách bảo mật</a>
-              của chúng tôi.
-            </p>
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 };
 

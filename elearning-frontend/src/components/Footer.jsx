@@ -13,37 +13,37 @@ const Footer = () => {
             </div>
             <span className="font-bold text-lg text-white">MyCourse.io</span>
           </div>
-          <p className="text-sm text-gray-400">Learn something new every day.</p>
+          <p className="text-sm text-gray-400">Học điều mới mỗi ngày.</p>
         </div>
 
         {/* <!-- Links Column 1 --> */}
         <div>
-          <h4 className="font-bold text-white mb-4">Programming</h4>
+          <h4 className="font-bold text-white mb-4">Lập trình</h4>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-teal-400 transition">Web Programming</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">Mobile Programming</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">Java Beginner</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">PHP Beginner</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Lập trình Web</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Lập trình Mobile</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Java Cơ bản</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">PHP Cơ bản</a></li>
           </ul>
         </div>
 
         {/* <!-- Links Column 2 --> */}
         <div>
-          <h4 className="font-bold text-white mb-4">Design</h4>
+          <h4 className="font-bold text-white mb-4">Thiết kế</h4>
           <ul className="space-y-2">
             <li><a href="#" className="hover:text-teal-400 transition">Adobe Illustrator</a></li>
             <li><a href="#" className="hover:text-teal-400 transition">Adobe Photoshop</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">Design Logo</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Thiết kế Logo</a></li>
           </ul>
         </div>
 
         {/* <!-- Links Column 3 --> */}
         <div>
-          <h4 className="font-bold text-white mb-4">Other</h4>
+          <h4 className="font-bold text-white mb-4">Khác</h4>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-teal-400 transition">Writing Course</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">Photography</a></li>
-            <li><a href="#" className="hover:text-teal-400 transition">Video Making</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Khóa học Viết lách</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Nhiếp ảnh</a></li>
+            <li><a href="#" className="hover:text-teal-400 transition">Dựng Video</a></li>
           </ul>
         </div>
       </div>
@@ -51,7 +51,7 @@ const Footer = () => {
        {/* Bottom Section */}
       <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between">
         <p className="text-gray-400 text-sm mb-4 md:mb-0">
-          © MyCourses 2024, All Rights Reserved
+          © MyCourses 2024, Bảo lưu mọi quyền
         </p>
 
         {/* <!-- Social Links --> */}
