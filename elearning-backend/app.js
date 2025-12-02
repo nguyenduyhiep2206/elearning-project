@@ -15,9 +15,15 @@ const app = express();
 
 const server = http.createServer(app);
 
+// Cấu hình CORS linh hoạt theo môi trường
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:3000', // giữ lại cho dev/backend nếu cần
+];
+
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true
   }
 });
@@ -29,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true
 }));
 
