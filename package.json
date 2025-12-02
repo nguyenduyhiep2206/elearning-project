@@ -6,12 +6,14 @@
   "main": "index.js",
   "workspaces": [
     "elearning-backend",
-    "elearning-frontend"
+    "elearning-frontend",
+    "blockchain-service"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=elearning-frontend\" \"npm run dev --workspace=elearning-backend\" ",
+    "dev": "concurrently \"npm run dev --workspace=elearning-frontend\" \"npm run dev --workspace=elearning-backend\" \"npm run compile --workspace=blockchain-service\"",
     "dev:fe": "npm run dev --workspace=elearning-frontend",
     "dev:be": "npm run dev --workspace=elearning-backend",
+    "dev:bc": "npm run compile --workspace=blockchain-service",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,5 +30,8 @@
   "homepage": "https://github.com/nguyenduyhiep2206/elearning-project#readme",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "pdfkit": "^0.17.2"
   }
 }
