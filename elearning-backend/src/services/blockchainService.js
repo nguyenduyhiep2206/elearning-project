@@ -25,7 +25,7 @@ class BlockchainService {
       this.initialize();
     }
   }
-
+//loadContractABI hàm để load ABI của smart contract
   loadContractABI() {
     try {
       const abiPath = path.join(
@@ -68,7 +68,7 @@ class BlockchainService {
       throw new Error('Failed to load contract ABI');
     }
   }
-
+//initialize hàm để khởi tạo kết nối blockchain
   initialize() {
     try {
       this.provider = new ethers.JsonRpcProvider(this.rpcUrl);
@@ -94,6 +94,7 @@ class BlockchainService {
     }
   }
 
+  //mintCertificateOnChain hàm để phát hành chứng chỉ trên blockchain
   async mintCertificateOnChain(recipientAddress, metadataUrl, certificateId) {
     try {
       if (!recipientAddress || !metadataUrl || !certificateId) {
@@ -237,6 +238,7 @@ class BlockchainService {
         }
       }
 
+      //trả về transactionHash và tokenId
       return { transactionHash: tx.hash, tokenId };
     } catch (error) {
       console.error(`❌ Error minting certificate ${certificateId} on chain:`, error);
@@ -244,6 +246,7 @@ class BlockchainService {
     }
   }
 
+  //isCertificateMinted kiểm tra chứng chỉ đã được phát hành trên blockchain chưa
   async isCertificateMinted(certificateId) {
     try {
       if (!this.contract) {
@@ -258,6 +261,7 @@ class BlockchainService {
     }
   }
 
+  //getTokenIdByCertificateId hàm để lấy tokenId của chứng chỉ trên blockchain
   async getTokenIdByCertificateId(certificateId) {
     try {
       if (!this.contract) {
@@ -272,6 +276,7 @@ class BlockchainService {
     }
   }
 
+  //getNetworkName hàm để lấy tên mạng blockchain
   getNetworkName() {
     if (this.rpcUrl.includes('localhost') || this.rpcUrl.includes('127.0.0.1')) {
       return 'Local Network';
@@ -288,6 +293,7 @@ class BlockchainService {
     }
   }
 
+  //getExplorerUrl hàm để lấy url của explorer blockchain
   getExplorerUrl(txHash) {
     if (this.rpcUrl.includes('localhost') || this.rpcUrl.includes('127.0.0.1')) {
       return null; // Local network không có explorer

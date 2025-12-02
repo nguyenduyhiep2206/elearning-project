@@ -22,6 +22,7 @@ const paymentRoutes = require('./payment.route'); // Import payment route
 const vnpayRoutes = require('./vnpay.route'); // Import vnpay route (tương thích ngược)
 const certificateRoutes = require('./certificate.route'); // Import certificate route
 const userRoutes = require('./user.route'); // Import user route
+const teacherRequestRoutes = require('./teacherRequest.route'); // Import teacher request route
 
 
 router.use('/auth', authRoutes);
@@ -46,6 +47,7 @@ router.use('/payment', paymentRoutes); // Sử dụng payment route với tiền
 router.use('/vnpay', vnpayRoutes); // Sử dụng vnpay route với tiền tố '/vnpay' (tương thích ngược)
 router.use('/certificates', certificateRoutes); // Sử dụng certificate route với tiền tố '/certificates'
 router.use('/users', userRoutes); // Sử dụng user route với tiền tố '/users'
+router.use('/teacher-requests', teacherRequestRoutes); // Sử dụng teacher request route với tiền tố '/teacher-requests'
 
 module.exports = router;
 

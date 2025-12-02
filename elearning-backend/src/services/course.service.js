@@ -1,5 +1,6 @@
 const { courses, categories, users, coursereviews, chapters, lessons } = require('../models');
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
+const searchService = require('./search.service');
 
 class CourseService {
   // Lấy tất cả khóa học với phân trang và tìm kiếm
@@ -228,13 +229,49 @@ class CourseService {
           {
             model: users,
             as: 'teacher',
-            attributes: ['userid', 'fullname']
+            // Lấy thêm profilepicture để HomePage hiển thị avatar giảng viên
+            attributes: ['userid', 'fullname', 'profilepicture']
           }
         ],
         limit: parseInt(limit),
         // Tạm thời sắp xếp theo ngày tạo mới nhất do không có cột enrollmentcount
         order: [['createdat', 'DESC']]
       });
+
+      // Tính trung bình rating và số lượng review cho mỗi khóa học
+      const courseIds = popularCourses.map(c => c.courseid);
+
+      if (courseIds.length > 0) {
+        const ratingRows = await coursereviews.findAll({
+          attributes: [
+            'courseid',
+            [fn('AVG', col('rating')), 'averageRating'],
+            [fn('COUNT', col('reviewid')), 'reviewCount'],
+          ],
+          where: {
+            courseid: {
+              [Op.in]: courseIds,
+            },
+          },
+          group: ['courseid'],
+        });
+
+        const ratingMap = new Map(
+          ratingRows.map(row => [
+            row.courseid,
+            {
+              averageRating: Number(row.get('averageRating')) || 0,
+              reviewCount: Number(row.get('reviewCount')) || 0,
+            },
+          ]),
+        );
+
+        popularCourses.forEach(course => {
+          const stats = ratingMap.get(course.courseid) || { averageRating: 0, reviewCount: 0 };
+          course.setDataValue('averageRating', stats.averageRating);
+          course.setDataValue('reviewCount', stats.reviewCount);
+        });
+      }
       
       return popularCourses;
     } catch (error) {
@@ -242,6 +279,7 @@ class CourseService {
       throw new Error(`Lỗi khi lấy khóa học phổ biến: ${error.message}`);
     }
   }
+  
     // Lấy khóa học mới nhất
   async getLatestCourses(limit = 8) {
     try {
@@ -255,12 +293,46 @@ class CourseService {
           {
             model: users,
             as: 'teacher',
-            attributes: ['userid', 'fullname']
+            attributes: ['userid', 'fullname', 'profilepicture']
           }
         ],
         limit: parseInt(limit),
         order: [['createdat', 'DESC']]
       });
+
+      const courseIds = latestCourses.map(c => c.courseid);
+
+      if (courseIds.length > 0) {
+        const ratingRows = await coursereviews.findAll({
+          attributes: [
+            'courseid',
+            [fn('AVG', col('rating')), 'averageRating'],
+            [fn('COUNT', col('reviewid')), 'reviewCount'],
+          ],
+          where: {
+            courseid: {
+              [Op.in]: courseIds,
+            },
+          },
+          group: ['courseid'],
+        });
+
+        const ratingMap = new Map(
+          ratingRows.map(row => [
+            row.courseid,
+            {
+              averageRating: Number(row.get('averageRating')) || 0,
+              reviewCount: Number(row.get('reviewCount')) || 0,
+            },
+          ]),
+        );
+
+        latestCourses.forEach(course => {
+          const stats = ratingMap.get(course.courseid) || { averageRating: 0, reviewCount: 0 };
+          course.setDataValue('averageRating', stats.averageRating);
+          course.setDataValue('reviewCount', stats.reviewCount);
+        });
+      }
       
       return latestCourses;
     } catch (error) {
@@ -268,45 +340,10 @@ class CourseService {
       throw new Error(`Lỗi khi lấy khóa học mới nhất: ${error.message}`);
     }
   }
-  // Tìm kiếm khóa học
+  
+  // Tìm kiếm khóa học - ủy thác cho searchService
   async searchCourses(query, page = 1, limit = 10) {
-    try {
-      const offset = (page - 1) * limit;
-      
-      const { count, rows } = await courses.findAndCountAll({
-        where: {
-          [Op.or]: [
-            { coursename: { [Op.iLike]: `%${query}%` } },
-            { description: { [Op.iLike]: `%${query}%` } }
-          ]
-        },
-        include: [
-          {
-            model: categories,
-            as: 'category',
-            attributes: ['categoryid', 'categoryname']
-          },
-          {
-            model: users,
-            as: 'teacher',
-            attributes: ['userid', 'fullname']
-          }
-        ],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        order: [['createdat', 'DESC']]
-      });
-      
-      return {
-        courses: rows,
-        totalCount: count,
-        totalPages: Math.ceil(count / limit),
-        currentPage: parseInt(page)
-      };
-    } catch (error) {
-      console.error('Error in searchCourses:', error);
-      throw new Error(`Lỗi khi tìm kiếm khóa học: ${error.message}`);
-    }
+    return searchService.searchCourses(query, page, limit);
   }
 }
 

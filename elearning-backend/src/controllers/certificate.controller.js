@@ -137,6 +137,43 @@ class CertificateController {
   }
 
   /**
+   * Lấy tất cả certificates (cho admin)
+   * GET /api/certificates/all
+   */
+  async getAllCertificates(req, res) {
+    try {
+      const {
+        studentId,
+        courseId,
+        search,
+        page = 1,
+        limit = 20,
+        sortBy = 'issuedat',
+        sortOrder = 'DESC'
+      } = req.query;
+
+      const result = await certificateService.getAllCertificates({
+        studentId,
+        courseId,
+        search,
+        page,
+        limit,
+        sortBy,
+        sortOrder
+      });
+
+      return apiResponse.success(
+        res,
+        result,
+        'Certificates retrieved successfully'
+      );
+    } catch (error) {
+      console.error('Error in getAllCertificates controller:', error);
+      return apiResponse.error(res, error.message || 'Failed to get certificates', 500);
+    }
+  }
+
+  /**
    * Download PDF certificate
    * GET /api/certificates/:certificateId/download
    */

@@ -32,6 +32,7 @@ router.get(
   },
   passport.authenticate("google", {
     scope: ["profile", "email"],
+    prompt: "select_account", // Luôn hiển thị account selector để user có thể chọn tài khoản khác
   })
 );
 

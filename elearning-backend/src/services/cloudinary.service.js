@@ -26,6 +26,9 @@ class CloudinaryService {
         params.folder = folder;
       }
       
+      // Thêm access_mode để file có thể truy cập công khai (quan trọng cho PDF)
+      params.access_mode = 'public';
+      
       // Thêm timestamp (BẮT BUỘC)
       params.timestamp = timestamp;
       

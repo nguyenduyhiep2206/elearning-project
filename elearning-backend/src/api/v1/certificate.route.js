@@ -3,6 +3,14 @@ const router = express.Router();
 const certificateController = require('../../controllers/certificate.controller');
 const { verifyToken, requireAdmin } = require('../../middlewares/auth.middleware');
 
+// GET /api/v1/certificates/all - Lấy tất cả certificates (chỉ Admin)
+router.get(
+  '/all',
+  verifyToken,
+  requireAdmin,
+  certificateController.getAllCertificates.bind(certificateController)
+);
+
 // POST /api/v1/certificates/issue - Issue certificate (chỉ Admin)
 router.post(
   '/issue',

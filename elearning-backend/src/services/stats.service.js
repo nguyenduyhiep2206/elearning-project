@@ -8,11 +8,14 @@ class StatsService {
    */
   async getOverviewStats() {
     try {
-      // Tổng doanh thu
+      // Tổng doanh thu - chỉ tính các đơn hàng đã thanh toán thành công (status = 'Completed')
       const totalRevenueResult = await orders.findOne({
         attributes: [
           [sequelize.fn('COALESCE', sequelize.fn('SUM', sequelize.col('totalamount')), 0), 'total']
         ],
+        where: {
+          status: 'Completed',
+        },
         raw: true
       });
       const totalRevenue = parseFloat(totalRevenueResult?.total || 0);
@@ -29,7 +32,7 @@ class StatsService {
       // Tổng số khóa học
       const totalCoursesResult = await courses.count();
 
-      // Tổng số đơn hàng
+      // Tổng số đơn hàng (tất cả trạng thái)
       const totalOrdersResult = await orders.count();
 
       // Tổng số đánh giá
@@ -45,7 +48,7 @@ class StatsService {
         }
       });
 
-      // Doanh thu hôm nay
+      // Doanh thu hôm nay - chỉ đơn hàng Completed
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayRevenueResult = await orders.findOne({
@@ -53,6 +56,7 @@ class StatsService {
           [sequelize.fn('COALESCE', sequelize.fn('SUM', sequelize.col('totalamount')), 0), 'total']
         ],
         where: {
+          status: 'Completed',
           createdat: {
             [Op.gte]: today
           }
@@ -61,7 +65,7 @@ class StatsService {
       });
       const todayRevenue = parseFloat(todayRevenueResult?.total || 0);
 
-      // Đơn hàng hôm nay
+      // Đơn hàng hôm nay (tất cả trạng thái)
       const todayOrdersResult = await orders.count({
         where: {
           createdat: {

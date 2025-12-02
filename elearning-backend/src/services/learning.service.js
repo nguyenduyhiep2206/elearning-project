@@ -1056,7 +1056,7 @@ class LearningService {
         // Tạo notification thông báo học viên cần cập nhật wallet address
         await notifications.create({
           userid: studentId,
-          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví để nhận chứng chỉ NFT.`,
+          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví để nhận chứng chỉ trên blockchain.`,
           isread: false,
           createdat: new Date()
         });
@@ -1068,7 +1068,7 @@ class LearningService {
         console.log(`[Auto Certificate] Invalid wallet address format for student ${studentId}. Certificate created but not minted.`);
         await notifications.create({
           userid: studentId,
-          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví hợp lệ để nhận chứng chỉ NFT.`,
+          message: `Chúc mừng! Bạn đã hoàn thành khóa học. Vui lòng cập nhật địa chỉ ví hợp lệ để nhận chứng chỉ trên blockchain.`,
           isread: false,
           createdat: new Date()
         });

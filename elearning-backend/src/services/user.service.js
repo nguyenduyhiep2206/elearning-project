@@ -2,6 +2,7 @@ const models = require('../models');  // Load từ index.js
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary.config');
 
 const UserModel = models.users;  // Alias cho users
 const UserDetailsModel = models.userdetails;  // Alias cho UserDetails
@@ -111,44 +112,44 @@ exports.deleteUser = async (id) => {
 };
 
 exports.uploadProfileImage = async (userId, file) => {
-    try {
-        const user = await UserModel.findByPk(userId);
-        if (!user) {
-            throw new Error('Người dùng không tồn tại.');
-        }
-
-        const uploadDir = path.join(__dirname, '../../public/uploads/profiles');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
-        // Tạo tên file unique
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join(uploadDir, fileName);
-
-        // Lưu file (giả sử file từ multer có buffer hoặc path)
-        fs.writeFileSync(filePath, file.buffer || fs.readFileSync(file.path));
-
-        // Update UserDetails
-        let details = await UserDetailsModel.findOne({ where: { userid: userId } });
-        if (!details) {
-            details = await UserDetailsModel.create({ userid: userId });
-        }
-
-        // Xóa ảnh cũ nếu có
-        if (details.profileImage) {
-            const oldPath = path.join(__dirname, '../../public', details.profileImage);
-            if (fs.existsSync(oldPath)) {
-                fs.unlinkSync(oldPath);
-            }
-        }
-
-        await details.update({ profileImage: `/uploads/profiles/${fileName}` });
-
-        return { message: 'Upload ảnh profile thành công.', profileImage: `/uploads/profiles/${fileName}` };
-    } catch (error) {
-        throw new Error(`Lỗi khi upload ảnh: ${error.message}`);
+  try {
+    const user = await UserModel.findByPk(userId);
+    if (!user) {
+      throw new Error('Người dùng không tồn tại.');
     }
+
+    if (!file || (!file.path && !file.buffer)) {
+      throw new Error('File ảnh không hợp lệ.');
+    }
+
+    // Upload lên Cloudinary (sử dụng file.path do multer lưu sẵn)
+    const uploadResult = await cloudinary.uploader.upload(file.path || '', {
+      folder: 'elearning/avatars',
+      resource_type: 'image',
+      access_mode: 'public',
+    });
+
+    const imageUrl = uploadResult.secure_url || uploadResult.url;
+    if (!imageUrl) {
+      throw new Error('Không lấy được URL ảnh từ Cloudinary.');
+    }
+
+    // Cập nhật ảnh đại diện trên bảng users (profilepicture)
+    user.profilepicture = imageUrl;
+    await user.save();
+
+    // Xóa file local nếu tồn tại để tránh đầy ổ đĩa
+    if (file.path && fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    return {
+      message: 'Upload ảnh profile thành công.',
+      profileImage: imageUrl,
+    };
+  } catch (error) {
+    throw new Error(`Lỗi khi upload ảnh: ${error.message}`);
+  }
 };
 
 exports.getUserDetails = async (userId) => {

@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service');
+const { users } = require('../models');
 const jwt = require('jsonwebtoken');
 
 const login = async (req, res, next) => {
@@ -107,29 +108,52 @@ const logout = async (req, res, next) => {
 };
 
 const verifyAuth = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies.authToken;
+  try {
+    const token =
+      req.headers.authorization?.replace('Bearer ', '') ||
+      req.cookies.authToken;
 
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token không được cung cấp',
-            });
-        }
-
-        const decoded = await authService.verifyToken(token);
-
-        res.status(200).json({
-            success: true,
-            message: 'Token hợp lệ',
-            data: { user: decoded },
-        });
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: error.message || 'Token không hợp lệ',
-        });
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token không được cung cấp',
+      });
     }
+
+    const decoded = await authService.verifyToken(token);
+
+    // Lấy đầy đủ thông tin user từ database để có id và profilepicture
+    const user = await users.findByPk(decoded.userId, {
+      attributes: ['userid', 'fullname', 'email', 'role', 'profilepicture', 'createdat'],
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Người dùng không tồn tại',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Token hợp lệ',
+      data: {
+        user: {
+          id: user.userid,
+          fullName: user.fullname,
+          email: user.email,
+          role: user.role,
+          profilepicture: user.profilepicture,
+          createdAt: user.createdat,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: error.message || 'Token không hợp lệ',
+    });
+  }
 };
 
 
@@ -138,14 +162,9 @@ const googleCallback = async (req, res) => {
     const googleProfile = req.user; 
     const result = await authService.loginWithGoogle(googleProfile);
 
-    if (result.isNew) {
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/login?registered=1`
-      );
-    }
-
+    // Cả user mới và user cũ đều có token, redirect với token
     return res.redirect(
-      `${process.env.FRONTEND_URL}/login?token=${result.token}&role=${result.user.role}`
+      `${process.env.FRONTEND_URL}/login?token=${result.token}&role=${result.user.role}${result.isNew ? '&registered=1' : ''}`
     );
   } catch (err) {
     console.error("Google Login Error:", err);

@@ -129,7 +129,7 @@ const requireInstructor = (req, res, next) => {
 
   // Kiểm tra role (case-insensitive để tránh lỗi)
   const userRole = req.user.role?.toLowerCase();
-  const allowedRoles = ["admin", "instructor", "teacher"];
+  const allowedRoles = ["admin", "instructor", "teacher", "student"];
 
   if (!allowedRoles.includes(userRole)) {
     // Chỉ log trong development mode

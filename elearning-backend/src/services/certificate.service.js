@@ -265,6 +265,83 @@ class CertificateService {
   }
 
   /**
+   * Lấy tất cả certificates (cho admin)
+   * @param {Object} options - Filter options (studentId, courseId, search, page, limit)
+   * @returns {Promise<Object>}
+   */
+  async getAllCertificates(options = {}) {
+    try {
+      const {
+        studentId,
+        courseId,
+        search,
+        page = 1,
+        limit = 20,
+        sortBy = 'issuedat',
+        sortOrder = 'DESC'
+      } = options;
+
+      const where = {};
+      if (studentId) {
+        where.studentid = parseInt(studentId);
+      }
+      if (courseId) {
+        where.courseid = parseInt(courseId);
+      }
+
+      const include = [
+        {
+          model: users,
+          as: 'student',
+          attributes: ['userid', 'fullname', 'email'],
+          required: false
+        },
+        {
+          model: courses,
+          as: 'course',
+          attributes: ['courseid', 'coursename', 'description', 'imageurl'],
+          required: false
+        }
+      ];
+
+      // Search by student name or course name
+      if (search) {
+        include[0].where = {
+          [Op.or]: [
+            { fullname: { [Op.like]: `%${search}%` } },
+            { email: { [Op.like]: `%${search}%` } }
+          ]
+        };
+        include[1].where = {
+          coursename: { [Op.like]: `%${search}%` }
+        };
+      }
+
+      const offset = (page - 1) * limit;
+
+      const { count, rows } = await certificates.findAndCountAll({
+        where,
+        include,
+        order: [[sortBy, sortOrder]],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        distinct: true
+      });
+
+      return {
+        certificates: rows,
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(count / limit)
+      };
+    } catch (error) {
+      console.error('Error getting all certificates:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Lấy thông tin certificate theo ID
    * @param {number} certificateId - ID của certificate
    * @returns {Promise<Object>}
@@ -571,7 +648,7 @@ class CertificateService {
       doc.fontSize(10)
          .fillColor('#95a5a6')
          .font('Helvetica-Oblique')
-         .text('Chứng chỉ này được phát hành dưới dạng NFT trên blockchain', {
+         .text('Chứng chỉ này được phát hành trên blockchain', {
            align: 'center',
            y: doc.page.height - 100
          });

@@ -1,10 +1,10 @@
 
-const { Notification, User } = require('../models'); // Giả sử export Notification từ models
+const { notifications, users } = require('../models');
 
 // Tạo notification mới
 exports.createNotification = async (userId, message) => {
     try {
-        const notification = await Notification.create({
+        const notification = await notifications.create({
             userid: userId,
             message
         });
@@ -23,7 +23,7 @@ exports.getUserNotifications = async (userId, page = 1, limit = 10, readStatus =
             where.isread = readStatus; 
         }
 
-        const { count: totalItems, rows: notifications } = await Notification.findAndCountAll({
+        const { count: totalItems, rows: notificationList } = await notifications.findAndCountAll({
             where,
             limit,
             offset,
@@ -31,9 +31,9 @@ exports.getUserNotifications = async (userId, page = 1, limit = 10, readStatus =
         });
 
         // Đếm unread
-        const unreadCount = await Notification.count({ where: { userid: userId, isread: false } });
+        const unreadCount = await notifications.count({ where: { userid: userId, isread: false } });
 
-        return { notifications, totalItems, unreadCount };
+        return { notifications: notificationList, totalItems, unreadCount };
     } catch (error) {
         throw new Error(`Lỗi khi lấy notifications: ${error.message}`);
     }
@@ -46,7 +46,7 @@ exports.updateNotificationReadStatus = async (userId, notificationIds, isRead) =
             notificationid: notificationIds, 
             userid: userId 
         };
-        const [updatedCount] = await Notification.update(
+        const [updatedCount] = await notifications.update(
             { isread: isRead },
             { where }
         );

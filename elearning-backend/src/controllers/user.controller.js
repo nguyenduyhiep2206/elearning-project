@@ -1,5 +1,7 @@
 const userService = require('../services/user.service');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
 const apiResponse = require('../utils/apiResponse');
 
 exports.getAllUsers = async (req, res, next) => {
@@ -55,7 +57,17 @@ exports.deleteUser = async (req, res, next) => {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/uploads/profiles/');
+        // Đảm bảo thư mục tồn tại trước khi lưu file
+        const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'profiles');
+        try {
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        } catch (err) {
+            console.error('Error ensuring upload directory exists:', err);
+            cb(err, uploadDir);
+        }
     },
     filename: (req, file, cb) => {
         cb(null, `${Date.now()}-${file.originalname}`);

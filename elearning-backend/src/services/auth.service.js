@@ -145,7 +145,7 @@ const register = async (fullName, email, password) => {
             fullname: fullName.trim(),
             email: email.toLowerCase().trim(),
             passwordhash: hashedPassword,
-            role: 'student', // Lowercase để phù hợp với ENUM
+            role: 'Student', // Lowercase để phù hợp với ENUM
             provider: 'local'
         });
 
@@ -203,13 +203,39 @@ const loginWithGoogle = async (googleProfile) => {
       fullname: displayName,
       email: email.toLowerCase().trim(),
       passwordhash: null,
-      role: "student", // Lowercase để phù hợp với ENUM
+      role: "Student", // Lowercase để phù hợp với ENUM
       provider: "google",
       googleid: googleProfile.id?.toString() || null,
       profilepicture: googleProfile.photos?.[0]?.value || null,
     });
 
-    return { isNew: true, user };
+    // Tạo token cho user mới
+    const token = jwt.sign(
+      {
+        userId: user.userid,
+        email: user.email,
+        role: user.role,
+        iat: Math.floor(Date.now() / 1000),
+      },
+      process.env.JWT_SECRET || "fallback-secret-key-for-development",
+      {
+        expiresIn: "1h",
+        issuer: "elearning-app",
+        audience: "elearning-users",
+      }
+    );
+
+    return {
+      isNew: true,
+      token,
+      user: {
+        id: user.userid,
+        fullName: user.fullname,
+        email: user.email,
+        role: user.role,
+        profilepicture: user.profilepicture,
+      },
+    };
   }
 
   if (user.provider === "local") {
