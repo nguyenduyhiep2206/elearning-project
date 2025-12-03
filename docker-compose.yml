@@ -1,26 +1,52 @@
-version: '3.8'
 
 services:
   backend:
-    build: ./elearning-backend
+    build:
+      context: ./elearning-backend
     container_name: docker-elearning-backend
+    restart: always
     ports:
-      - '3000:3000'
+      - "3000:3000"
     networks:
       - elearning
     env_file:
       - ./elearning-backend/.env
-    depends_on: []
 
-  frontend:
-    build: ./elearning-frontend
-    container_name: docker-elearning-frontend
+  blockchain:
+    build:
+      context: ./blockchain-service
+    container_name: docker-blockchain-service
+    restart: always
     ports:
-      - '5173:5173'
-    depends_on:
-      - backend
+      - "8545:8545"
     networks:
       - elearning
+
+  frontend:
+    build:
+      context: ./elearning-frontend
+    container_name: docker-elearning-frontend
+    restart: always
+    networks:
+      - elearning
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: elearning-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./elearning-frontend/dist:/usr/share/nginx/html:ro
+    networks:
+      - elearning
+    depends_on:
+      - frontend
+      - backend
 
 networks:
   elearning:
