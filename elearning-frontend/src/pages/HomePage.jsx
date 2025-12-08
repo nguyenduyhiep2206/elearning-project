@@ -9,7 +9,7 @@ const HomePage = () => {
 
 useEffect(() => {
   const stored = JSON.parse(localStorage.getItem("user")) || {};
-  setCurrentUser(stored.user || null);
+ setCurrentUser(stored|| null);
 }, []);
 
   const navigate = useNavigate();
