@@ -1,0 +1,59 @@
+# ============================================================================
+# CACH SAI - KHONG AN TOAN - DUNG DE DEMO
+# Secrets hardcode truc tiep trong file
+# ============================================================================
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../../elearning-backend
+      dockerfile: ../security-demo/1-image-hardening/Dockerfile.insecure
+    container_name: insecure-elearning-backend
+    ports:
+      - "3001:3000"
+    networks:
+      - demo-network
+    environment:
+      # SAI 1: Hardcode password truc tiep
+      - DB_HOST=ep-muddy-mountain-a4bnlpnx-pooler.us-east-1.aws.neon.tech
+      - DB_PORT=5432
+      - DB_NAME=elearning
+      - DB_USER=elearndb
+      - DB_PASSWORD=npg_Q3sU7gTEzHup
+      
+      # SAI 2: JWT secret trong plain text
+      - JWT_SECRET=J9t$kP4!wQ7^2zF@uL8#rT0%nH6&bC3*YpE1$VmZ5!gR9^xK2@dS7
+      - JWT_EXPIRES_IN=7d
+      
+      # SAI 3: API keys hardcode
+      - CLOUDINARY_CLOUD_NAME=dhd3gr6dp
+      - CLOUDINARY_API_KEY=979394131622718
+      - CLOUDINARY_API_SECRET=ILZPr_CNP8SNuxphV3M1qeHwb1M
+      
+      # SAI 4: VNPay secrets
+      - VNPAY_TMN_CODE=17EJVP1S
+      - VNPAY_HASH_SECRET=D1TKG5J8R0SAHII8J79CUJGDUOAAR3XF
+      
+      # SAI 5: Google OAuth
+      - GOOGLE_CLIENT_ID=XXXXXXXX
+      - GOOGLE_CLIENT_SECRET=XXXXXXXX
+      
+      - NODE_ENV=production
+      - PORT=3000
+
+networks:
+  demo-network:
+    driver: bridge
+
+# VAN DE VOI CACH NAY:
+#
+# 1. Secrets hien thi trong docker inspect:
+#    docker inspect insecure-elearning-backend | findstr "PASSWORD"
+#
+# 2. Neu commit file nay len Git -> LO TAT CA SECRETS!
+#
+# 3. Secrets hien thi trong logs, monitoring tools
+#
+# 4. Bat ky ai co quyen doc file nay deu thay secrets

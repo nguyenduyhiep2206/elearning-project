@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Secrets - KHÔNG BAO GIỜ commit!
+secrets/*.txt
+!secrets/README.md
+!secrets/.gitignore
+
+# Logs
+*.log
+logs/
+
+# Docker
+*.tar
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scan results (có thể commit nếu muốn)
+# scan-results/
+

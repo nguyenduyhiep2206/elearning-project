@@ -1,0 +1,24 @@
+# ============================================================================
+# DOCKERFILE KHONG AN TOAN - DUNG DE DEMO
+# Danh cho project elearning-backend
+# ============================================================================
+
+# Van de 1: Dung full image - qua nang, nhieu lo hong
+FROM node:20
+
+# Van de 2: Khong tao user rieng - chay voi root
+WORKDIR /app
+
+# Van de 3: Copy tat ca file, ke ca .env, .git
+COPY . .
+
+# Van de 4: Khong dung --production, cai ca devDependencies
+RUN npm install
+
+# Van de 5: Khong set NODE_ENV
+# Van de 6: Khong co health check
+
+EXPOSE 3000
+
+# Van de 7: Chay voi quyen root (mac dinh)
+CMD ["npm", "run", "dev"]

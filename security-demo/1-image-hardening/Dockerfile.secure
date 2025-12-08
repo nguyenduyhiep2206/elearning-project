@@ -1,0 +1,56 @@
+# ============================================================================
+# DOCKERFILE DA HARDENING - AN TOAN
+# Danh cho project elearning-backend
+# ============================================================================
+
+# STAGE 1: BUILD
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files truoc de tan dung cache
+COPY package*.json ./
+
+# Chi cai production dependencies
+RUN npm install --omit=dev && \
+    npm cache clean --force
+
+# STAGE 2: PRODUCTION
+FROM node:20-alpine AS production
+
+# Labels
+LABEL maintainer="elearning-team"
+LABEL description="E-Learning Backend - Secured"
+
+# Tao non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy node_modules tu builder
+COPY --from=builder --chown=appuser:appgroup /app/node_modules ./node_modules
+
+# Copy source code voi dung ownership
+COPY --chown=appuser:appgroup src/ ./src/
+COPY --chown=appuser:appgroup app.js ./
+COPY --chown=appuser:appgroup package.json ./
+
+# Tao thu muc public voi quyen ghi
+RUN mkdir -p /app/public/uploads /app/public/certificates /app/public/metadata && \
+    chown -R appuser:appgroup /app/public
+
+# Set NODE_ENV
+ENV NODE_ENV=production
+
+# Chuyen sang non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/api/v1', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
+
+EXPOSE 3000
+
+# Chay truc tiep voi node
+CMD ["node", "app.js"]

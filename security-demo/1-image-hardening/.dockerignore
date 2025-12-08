@@ -1,0 +1,45 @@
+# .dockerignore cho elearning-backend
+# Khong copy cac file nay vao image
+
+# Dependencies - se duoc cai lai
+node_modules/
+npm-debug.log
+
+# Git
+.git/
+.gitignore
+
+# Environment files - KHONG BAO GIO copy secrets!
+.env
+.env.*
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+coverage/
+
+# Documentation
+*.md
+docs/
+
+# Docker files
+Dockerfile*
+docker-compose*
+
+# Cac file khong can thiet
+.DS_Store
+Thumbs.db
+
+# Trained data (qua lon)
+*.traineddata

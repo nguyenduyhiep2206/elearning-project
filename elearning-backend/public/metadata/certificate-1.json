@@ -1,0 +1,32 @@
+{
+  "name": "Academic Certificate - Khóa học dành cho người mới DATA ANALYTICS FOUNDATION PLUS",
+  "description": "This certificate is awarded to Nguyễn Duy Hiệp for successfully completing the course \"Khóa học dành cho người mới DATA ANALYTICS FOUNDATION PLUS\"",
+  "image": "https://datapot.vn/wp-content/uploads/2022/11/17.jpg",
+  "attributes": [
+    {
+      "trait_type": "Student Name",
+      "value": "Nguyễn Duy Hiệp"
+    },
+    {
+      "trait_type": "Student Email",
+      "value": "nguyenduyhiep0406@gmail.com"
+    },
+    {
+      "trait_type": "Course Name",
+      "value": "Khóa học dành cho người mới DATA ANALYTICS FOUNDATION PLUS"
+    },
+    {
+      "trait_type": "Course ID",
+      "value": "17"
+    },
+    {
+      "trait_type": "Certificate ID",
+      "value": "1"
+    },
+    {
+      "trait_type": "Issue Date",
+      "value": "2025-11-29T22:25:07.941Z"
+    }
+  ],
+  "external_url": "http://localhost:5173/certificates/1"
+}

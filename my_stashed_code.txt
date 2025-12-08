@@ -1,0 +1,725 @@
+diff --git a/elearning-backend/src/api/v1/category.route.js b/elearning-backend/src/api/v1/category.route.js
+deleted file mode 100644
+index 80e9b19..0000000
+--- a/elearning-backend/src/api/v1/category.route.js
++++ /dev/null
+@@ -1,13 +0,0 @@
+-// src/api/v1/category.route.js
+-const express = require('express');
+-const router = express.Router();
+-const categoryController = require('../../controllers/category.controller');
+-
+-// Các route này giờ đã khớp với tên hàm trong controller
+-router.get('/', categoryController.getAllCategories);
+-router.get('/:id', categoryController.getCategoryById);
+-router.post('/', categoryController.createCategory);
+-router.put('/:id', categoryController.updateCategory);
+-router.delete('/:id', categoryController.deleteCategory);
+-
+-module.exports = router;
+diff --git a/elearning-backend/src/api/v1/course.route.js b/elearning-backend/src/api/v1/course.route.js
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/elearning-backend/src/controllers/category.controller.js b/elearning-backend/src/controllers/category.controller.js
+index 166284a..d3d7fc0 100644
+--- a/elearning-backend/src/controllers/category.controller.js
++++ b/elearning-backend/src/controllers/category.controller.js
+@@ -1,85 +1,56 @@
+-// src/controllers/category.controller.js
++// controllers/category.controller.js
++
+ const categoryService = require('../services/category.service');
+ 
+-// Đồng bộ tên hàm với file route để dễ quản lý
+-const categoryController = {
+-    // [POST] /api/v1/categories
+-    createCategory: async (req, res) => {
+-        try {
+-            const { categoryName, description } = req.body;
+-            if (!categoryName) {
+-                return res.status(400).json({ message: "Category name is required." });
+-            }
+-            const newCategory = await categoryService.createCategory({ categoryname: categoryName, description });
+-            res.status(201).json({
+-                message: "Tạo danh mục thành công!",
+-                data: newCategory
+-            });
+-        } catch (error) {
+-            res.status(500).json({ message: error.message });
+-        }
+-    },
++const handleError = (res, error) => {
++  console.error(error);
++  return res.status(500).json({ message: error.message });
++};
+ 
+-    // [GET] /api/v1/categories
+-    getAllCategories: async (req, res) => {
+-        try {
+-            const categories = await categoryService.getAllCategories();
+-            res.status(200).json({
+-                message: "Lấy danh sách danh mục thành công!",
+-                data: categories
+-            });
+-        } catch (error) {
+-            res.status(500).json({ message: error.message });
+-        }
+-    },
++exports.getAllCategories = async (req, res) => {
++  try {
++    const allCategories = await categoryService.getAllCategories();
++    res.status(200).json(allCategories);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
+ 
+-    // [GET] /api/v1/categories/:id
+-    getCategoryById: async (req, res) => {
+-        try {
+-            const category = await categoryService.getCategoryById(req.params.id);
+-            if (category) {
+-                res.status(200).json({
+-                    message: "Tìm thấy danh mục!",
+-                    data: category
+-                });
+-            } else {
+-                res.status(404).json({ message: 'Không tìm thấy danh mục!' });
+-            }
+-        } catch (error) {
+-            res.status(500).json({ message: error.message });
+-        }
+-    },
++exports.getCategoryById = async (req, res) => {
++  try {
++    const category = await categoryService.getCategoryById(req.params.id);
++    if (!category) {
++      return res.status(404).json({ message: 'Category not found' });
++    }
++    res.status(200).json(category);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
+ 
+-    // [PUT] /api/v1/categories/:id
+-    updateCategory: async (req, res) => {
+-        try {
+-            const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
+-            if (updatedCategory) {
+-                res.status(200).json({
+-                    message: "Cập nhật danh mục thành công!",
+-                    data: updatedCategory
+-                });
+-            } else {
+-                res.status(404).json({ message: 'Không tìm thấy danh mục!' });
+-            }
+-        } catch (error) {
+-            res.status(500).json({ message: error.message });
+-        }
+-    },
++exports.createCategory = async (req, res) => {
++  try {
++    const newCategory = await categoryService.createCategory(req.body);
++    res.status(201).json(newCategory);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
+ 
+-    // [DELETE] /api/v1/categories/:id
+-    deleteCategory: async (req, res) => {
+-        try {
+-            const result = await categoryService.deleteCategory(req.params.id);
+-            if (result) {
+-                res.status(200).json({ message: 'Xóa danh mục thành công!' });
+-            } else {
+-                res.status(404).json({ message: 'Không tìm thấy danh mục!' });
+-            }
+-        } catch (error) {
+-            res.status(500).json({ message: error.message });
+-        }
+-    }
++exports.updateCategory = async (req, res) => {
++  try {
++    const updatedCategory = await categoryService.updateCategory(req.params.id, req.body);
++    res.status(200).json(updatedCategory);
++  } catch (error) {
++    handleError(res, error);
++  }
+ };
+ 
+-module.exports = categoryController;
++exports.deleteCategory = async (req, res) => {
++  try {
++    await categoryService.deleteCategory(req.params.id);
++    res.status(204).send();
++  } catch (error) {
++    handleError(res, error);
++  }
++};
+\ No newline at end of file
+diff --git a/elearning-backend/src/controllers/course.controller.js b/elearning-backend/src/controllers/course.controller.js
+index e69de29..244dde1 100644
+--- a/elearning-backend/src/controllers/course.controller.js
++++ b/elearning-backend/src/controllers/course.controller.js
+@@ -0,0 +1,61 @@
++// controllers/course.controller.js
++const courseService = require('../services/course.service');
++
++// Hàm xử lý lỗi chung (hoặc bạn có thể dùng middleware)
++const handleError = (res, error) => {
++  console.error(error);
++  return res.status(500).json({ message: error.message });
++};
++
++exports.getAllCourses = async (req, res) => {
++  try {
++    const allCourses = await courseService.getAllCourses();
++    res.status(200).json(allCourses);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
++
++exports.getCourseById = async (req, res) => {
++  try {
++    const course = await courseService.getCourseById(req.params.id);
++    if (!course) {
++      return res.status(404).json({ message: 'Course not found' });
++    }
++    res.status(200).json(course);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
++
++exports.createCourse = async (req, res) => {
++  try {
++    // Giả sử teacherid được lấy từ req.user (đã đăng nhập)
++    // const teacherId = req.user.id;
++    // const newCourse = await courseService.createCourse({...req.body, teacherid: teacherId});
++    
++    // Hoặc lấy từ req.body nếu admin tạo
++    const newCourse = await courseService.createCourse(req.body);
++    res.status(201).json(newCourse);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
++
++exports.updateCourse = async (req, res) => {
++  try {
++    const updatedCourse = await courseService.updateCourse(req.params.id, req.body);
++    res.status(200).json(updatedCourse);
++  } catch (error) {
++    handleError(res, error);
++  }
++};
++
++exports.deleteCourse = async (req, res) => {
++  try {
++    await courseService.deleteCourse(req.params.id);
++    res.status(204).send(); // 204 No Content
++  } catch (error) {
++    handleError(res, error);
++  }
++};
+\ No newline at end of file
+diff --git a/elearning-backend/src/models/init-models.js b/elearning-backend/src/models/init-models.js
+index 244f9a7..db71d2f 100644
+--- a/elearning-backend/src/models/init-models.js
++++ b/elearning-backend/src/models/init-models.js
+@@ -66,109 +66,253 @@ function initModels(sequelize) {
+   var userdetails = _userdetails(sequelize, DataTypes);
+   var users = _users(sequelize, DataTypes);
+ 
+-  submissions.belongsTo(assignments, { as: "assignment", foreignKey: "assignmentid"});
+-  assignments.hasMany(submissions, { as: "submissions", foreignKey: "assignmentid"});
+-  courses.belongsTo(categories, { as: "category", foreignKey: "categoryid"});
++ // PHẦN 1: ĐỊNH NGHĨA CÁC MỐI QUAN HỆ (ASSOCIATIONS)
++  // -----------------------------------------------------------------
++  // --- Core (User, Category, Course, Chapter, Lesson) ---
++  users.hasMany(courses, { as: "taughtCourses", foreignKey: "teacherid"});
++  courses.belongsTo(users, { as: "teacher", foreignKey: "teacherid"});
++  
+   categories.hasMany(courses, { as: "courses", foreignKey: "categoryid"});
+-  lessons.belongsTo(chapters, { as: "chapter", foreignKey: "chapterid"});
++  courses.belongsTo(categories, { as: "category", foreignKey: "categoryid"});
++
++  courses.hasMany(chapters, { as: "chapters", foreignKey: "courseid"});
++  chapters.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++
++  courses.hasMany(lessons, { as: "lessons", foreignKey: "courseid"});
++  lessons.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++  
+   chapters.hasMany(lessons, { as: "lessons", foreignKey: "chapterid"});
+-  assignments.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++  lessons.belongsTo(chapters, { as: "chapter", foreignKey: "chapterid"});
++
++  // --- Learning Progress (User, Lesson, Progress, Completion, Certificate) ---
++  users.hasMany(lessonprogress, { as: "progress", foreignKey: "studentid"});
++  lessonprogress.belongsTo(users, { as: "student", foreignKey: "studentid"});
++  
++  lessons.hasMany(lessonprogress, { as: "progress", foreignKey: "lessonid"});
++  lessonprogress.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
++
++  users.hasMany(coursecompletions, { as: "completions", foreignKey: "studentid"});
++  coursecompletions.belongsTo(users, { as: "student", foreignKey: "studentid"});
++
++  courses.hasMany(coursecompletions, { as: "completions", foreignKey: "courseid"});
++  coursecompletions.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++
++  users.hasMany(certificates, { as: "certificates", foreignKey: "studentid"});
++  certificates.belongsTo(users, { as: "student", foreignKey: "studentid"});
++
++  courses.hasMany(certificates, { as: "certificates", foreignKey: "courseid"});
++  certificates.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++
++  lessons.hasMany(lessoncomments, { as: "comments", foreignKey: "lessonid"});
++  lessoncomments.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
++
++  users.hasMany(lessoncomments, { as: "comments", foreignKey: "studentid"});
++  lessoncomments.belongsTo(users, { as: "student", foreignKey: "studentid"});
++
++  // --- Assignments ---
+   courses.hasMany(assignments, { as: "assignments", foreignKey: "courseid"});
++  assignments.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++
++  assignments.hasMany(submissions, { as: "submissions", foreignKey: "assignmentid"});
++  submissions.belongsTo(assignments, { as: "assignment", foreignKey: "assignmentid"});
++
++  users.hasMany(submissions, { as: "submissions", foreignKey: "studentid"});
++  submissions.belongsTo(users, { as: "student", foreignKey: "studentid"});
++
++  // --- Quizzes ---
++  lessons.hasMany(quizzes, { as: "quizzes", foreignKey: "lessonid"});
++  quizzes.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
++
++  quizzes.hasMany(quizquestions, { as: "questions", foreignKey: "quizid"});
++  quizquestions.belongsTo(quizzes, { as: "quiz", foreignKey: "quizid"});
++
++  quizquestions.hasMany(quizoptions, { as: "options", foreignKey: "questionid"});
++  quizoptions.belongsTo(quizquestions, { as: "question", foreignKey: "questionid"});
++
++  quizzes.hasMany(quizsessions, { as: "sessions", foreignKey: "quizid"});
++  quizsessions.belongsTo(quizzes, { as: "quiz", foreignKey: "quizid"});
++
++  users.hasMany(quizsessions, { as: "quizSessions", foreignKey: "studentid"});
++  quizsessions.belongsTo(users, { as: "student", foreignKey: "studentid"});
++
++  quizsessions.hasMany(quizanswers, { as: "answers", foreignKey: "sessionid"});
++  quizanswers.belongsTo(quizsessions, { as: "session", foreignKey: "sessionid"});
++
++  quizquestions.hasMany(quizanswers, { as: "answers", foreignKey: "questionid"});
++  quizanswers.belongsTo(quizquestions, { as: "question", foreignKey: "questionid"});
++
++  quizoptions.hasMany(quizanswers, { as: "answers", foreignKey: "selectedoptionid"});
++  quizanswers.belongsTo(quizoptions, { as: "selectedOption", foreignKey: "selectedoptionid"});
++  
++  // --- Forum ---
++  courses.hasMany(forumdiscussions, { as: "discussions", foreignKey: "courseid"});
++  forumdiscussions.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++
++  users.hasMany(forumdiscussions, { as: "discussions", foreignKey: "createdby"});
++  forumdiscussions.belongsTo(users, { as: "author", foreignKey: "createdby"});
++
++  forumdiscussions.hasMany(forumreplies, { as: "replies", foreignKey: "discussionid"});
++  forumreplies.belongsTo(forumdiscussions, { as: "discussion", foreignKey: "discussionid"});
++
++  users.hasMany(forumreplies, { as: "replies", foreignKey: "userid"});
++  forumreplies.belongsTo(users, { as: "author", foreignKey: "userid"});
++
++  // --- PHẦN BỔ SUNG: Các quan hệ chỉ có trong code gốc (Input 1) ---
++  // (E-commerce, Reviews, Social, Admin, etc.)
+   cart.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(cart, { as: "carts", foreignKey: "courseid"});
+-  certificates.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(certificates, { as: "certificates", foreignKey: "courseid"});
+-  chapters.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(chapters, { as: "chapters", foreignKey: "courseid"});
+-  coursecompletions.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(coursecompletions, { as: "coursecompletions", foreignKey: "courseid"});
++
++  cart.belongsTo(users, { as: "user", foreignKey: "userid"});
++  users.hasMany(cart, { as: "carts", foreignKey: "userid"});
++
+   coursereviews.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(coursereviews, { as: "coursereviews", foreignKey: "courseid"});
++
++  coursereviews.belongsTo(users, { as: "student", foreignKey: "studentid"});
++  users.hasMany(coursereviews, { as: "coursereviews", foreignKey: "studentid"});
++
+   enrollments.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(enrollments, { as: "enrollments", foreignKey: "courseid"});
++
++  enrollments.belongsTo(users, { as: "student", foreignKey: "studentid"});
++  users.hasMany(enrollments, { as: "enrollments", foreignKey: "studentid"});
++
+   favorites.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(favorites, { as: "favorites", foreignKey: "courseid"});
+-  forumdiscussions.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(forumdiscussions, { as: "forumdiscussions", foreignKey: "courseid"});
+-  lessons.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(lessons, { as: "lessons", foreignKey: "courseid"});
++
++  favorites.belongsTo(users, { as: "user", foreignKey: "userid"});
++  users.hasMany(favorites, { as: "favorites", foreignKey: "userid"});
++
+   livesessions.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(livesessions, { as: "livesessions", foreignKey: "courseid"});
++
++  livesessions.belongsTo(users, { as: "teacher", foreignKey: "teacherid"});
++  users.hasMany(livesessions, { as: "livesessions", foreignKey: "teacherid"});
++
+   orderdetails.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+   courses.hasMany(orderdetails, { as: "orderdetails", foreignKey: "courseid"});
+-  reports.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(reports, { as: "reports", foreignKey: "courseid"});
+-  schedules.belongsTo(courses, { as: "course", foreignKey: "courseid"});
+-  courses.hasMany(schedules, { as: "schedules", foreignKey: "courseid"});
+-  forumreplies.belongsTo(forumdiscussions, { as: "discussion", foreignKey: "discussionid"});
+-  forumdiscussions.hasMany(forumreplies, { as: "forumreplies", foreignKey: "discussionid"});
+-  lessoncomments.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
+-  lessons.hasMany(lessoncomments, { as: "lessoncomments", foreignKey: "lessonid"});
+-  lessonprogress.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
+-  lessons.hasMany(lessonprogress, { as: "lessonprogresses", foreignKey: "lessonid"});
+-  quizzes.belongsTo(lessons, { as: "lesson", foreignKey: "lessonid"});
+-  lessons.hasMany(quizzes, { as: "quizzes", foreignKey: "lessonid"});
++
+   orderdetails.belongsTo(orders, { as: "order", foreignKey: "orderid"});
+   orders.hasMany(orderdetails, { as: "orderdetails", foreignKey: "orderid"});
++
+   orders.belongsTo(promotions, { as: "promotion", foreignKey: "promotionid"});
+   promotions.hasMany(orders, { as: "orders", foreignKey: "promotionid"});
+-  quizanswers.belongsTo(quizoptions, { as: "selectedoption", foreignKey: "selectedoptionid"});
+-  quizoptions.hasMany(quizanswers, { as: "quizanswers", foreignKey: "selectedoptionid"});
+-  quizanswers.belongsTo(quizquestions, { as: "question", foreignKey: "questionid"});
+-  quizquestions.hasMany(quizanswers, { as: "quizanswers", foreignKey: "questionid"});
+-  quizoptions.belongsTo(quizquestions, { as: "question", foreignKey: "questionid"});
+-  quizquestions.hasMany(quizoptions, { as: "quizoptions", foreignKey: "questionid"});
+-  quizanswers.belongsTo(quizsessions, { as: "session", foreignKey: "sessionid"});
+-  quizsessions.hasMany(quizanswers, { as: "quizanswers", foreignKey: "sessionid"});
+-  quizquestions.belongsTo(quizzes, { as: "quiz", foreignKey: "quizid"});
+-  quizzes.hasMany(quizquestions, { as: "quizquestions", foreignKey: "quizid"});
+-  quizsessions.belongsTo(quizzes, { as: "quiz", foreignKey: "quizid"});
+-  quizzes.hasMany(quizsessions, { as: "quizsessions", foreignKey: "quizid"});
+-  cart.belongsTo(users, { as: "user", foreignKey: "userid"});
+-  users.hasMany(cart, { as: "carts", foreignKey: "userid"});
+-  certificates.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(certificates, { as: "certificates", foreignKey: "studentid"});
+-  coursecompletions.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(coursecompletions, { as: "coursecompletions", foreignKey: "studentid"});
+-  coursereviews.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(coursereviews, { as: "coursereviews", foreignKey: "studentid"});
+-  courses.belongsTo(users, { as: "teacher", foreignKey: "teacherid"});
+-  users.hasMany(courses, { as: "courses", foreignKey: "teacherid"});
+-  enrollments.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(enrollments, { as: "enrollments", foreignKey: "studentid"});
+-  favorites.belongsTo(users, { as: "user", foreignKey: "userid"});
+-  users.hasMany(favorites, { as: "favorites", foreignKey: "userid"});
+-  forumdiscussions.belongsTo(users, { as: "createdby_user", foreignKey: "createdby"});
+-  users.hasMany(forumdiscussions, { as: "forumdiscussions", foreignKey: "createdby"});
+-  forumreplies.belongsTo(users, { as: "user", foreignKey: "userid"});
+-  users.hasMany(forumreplies, { as: "forumreplies", foreignKey: "userid"});
+-  lessoncomments.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(lessoncomments, { as: "lessoncomments", foreignKey: "studentid"});
+-  lessonprogress.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(lessonprogress, { as: "lessonprogresses", foreignKey: "studentid"});
+-  livesessions.belongsTo(users, { as: "teacher", foreignKey: "teacherid"});
+-  users.hasMany(livesessions, { as: "livesessions", foreignKey: "teacherid"});
+-  messages.belongsTo(users, { as: "receiver", foreignKey: "receiverid"});
+-  users.hasMany(messages, { as: "messages", foreignKey: "receiverid"});
+-  messages.belongsTo(users, { as: "sender", foreignKey: "senderid"});
+-  users.hasMany(messages, { as: "sender_messages", foreignKey: "senderid"});
+-  notifications.belongsTo(users, { as: "user", foreignKey: "userid"});
+-  users.hasMany(notifications, { as: "notifications", foreignKey: "userid"});
++
+   orders.belongsTo(users, { as: "user", foreignKey: "userid"});
+   users.hasMany(orders, { as: "orders", foreignKey: "userid"});
+-  quizsessions.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(quizsessions, { as: "quizsessions", foreignKey: "studentid"});
++
++  reports.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++  courses.hasMany(reports, { as: "reports", foreignKey: "courseid"});
++
+   reports.belongsTo(users, { as: "student", foreignKey: "studentid"});
+   users.hasMany(reports, { as: "reports", foreignKey: "studentid"});
++
++  schedules.belongsTo(courses, { as: "course", foreignKey: "courseid"});
++  courses.hasMany(schedules, { as: "schedules", foreignKey: "courseid"});
++
+   schedules.belongsTo(users, { as: "teacher", foreignKey: "teacherid"});
+   users.hasMany(schedules, { as: "schedules", foreignKey: "teacherid"});
+-  submissions.belongsTo(users, { as: "student", foreignKey: "studentid"});
+-  users.hasMany(submissions, { as: "submissions", foreignKey: "studentid"});
++
++  messages.belongsTo(users, { as: "receiver", foreignKey: "receiverid"});
++  users.hasMany(messages, { as: "messages", foreignKey: "receiverid"});
++
++  messages.belongsTo(users, { as: "sender", foreignKey: "senderid"});
++  users.hasMany(messages, { as: "sender_messages", foreignKey: "senderid"});
++
++  notifications.belongsTo(users, { as: "user", foreignKey: "userid"});
++  users.hasMany(notifications, { as: "notifications", foreignKey: "userid"});
++
+   teacherrequests.belongsTo(users, { as: "user", foreignKey: "userid"});
+   users.hasMany(teacherrequests, { as: "teacherrequests", foreignKey: "userid"});
++
+   userdetails.belongsTo(users, { as: "user", foreignKey: "userid"});
+   users.hasMany(userdetails, { as: "userdetails", foreignKey: "userid"});
+ 
++
++// -----------------------------------------------------------------
++  // PHẦN 2: LOGIC TỰ ĐỘNG (SEQUELIZE HOOKS)
++  // -----------------------------------------------------------------
++
++  // Hook 1: Sau khi một LessonProgress được tạo/cập nhật
++  lessonprogress.addHook('afterUpdate', 'checkCourseCompletion', async (progress, options) => {
++    // Chỉ chạy logic nếu bài học vừa được đánh dấu là "hoàn thành"
++    if (progress.iscompleted && progress.previous('iscompleted') === false) {
++      const studentId = progress.studentid;
++      const lesson = await lessons.findByPk(progress.lessonid);
++      if (!lesson) return; // Không tìm thấy bài học
++      
++      const courseId = lesson.courseid;
++
++      // 1. Đếm tổng số bài học trong khóa học này
++      const totalLessons = await lessons.count({
++        where: { courseid: courseId }
++      });
++
++      // 2. Đếm số bài học mà học viên này đã hoàn thành trong khóa học
++      const completedLessons = await lessonprogress.count({
++        where: {
++          studentid: studentId,
++          iscompleted: true
++        },
++        include: [{
++          model: lessons,
++          as: 'lesson',
++          where: { courseid: courseId },
++          required: true
++        }]
++      });
++
++      // 3. So sánh
++      if (totalLessons > 0 && totalLessons === completedLessons) {
++        // 4. Kiểm tra xem đã có bản ghi hoàn thành chưa
++        const existingCompletion = await coursecompletions.findOne({
++          where: {
++            studentid: studentId,
++            courseid: courseId
++          }
++        });
++
++        // 5. Nếu chưa có, tạo mới
++        if (!existingCompletion) {
++          console.log(`[Hook] Student ${studentId} completed course ${courseId}. Generating completion record...`);
++          await coursecompletions.create({
++            studentid: studentId,
++            courseid: courseId,
++            completedat: new Date()
++          });
++        }
++      }
++    }
++  });
++
++  // Hook 2: Sau khi một CourseCompletion được tạo -> Tự động tạo Certificate
++  coursecompletions.addHook('afterCreate', 'generateCertificate', async (completion, options) => {
++    const studentId = completion.studentid;
++    const courseId = completion.courseid;
++
++    // 1. Kiểm tra xem đã có chứng chỉ chưa
++    const existingCertificate = await certificates.findOne({
++      where: {
++        studentid: studentId,
++        courseid: courseId
++      }
++    });
++
++    // 2. Nếu chưa có, tạo mới
++    if (!existingCertificate) {
++      console.log(`[Hook] Generating certificate for student ${studentId}, course ${courseId}...`);
++      await certificates.create({
++        studentid: studentId,
++        courseid: courseId,
++        issuedat: new Date()
++      });
++    }
++  });
++
++  // -----------------------------------------------------------------
++  // PHẦN 3: TRẢ VỀ CÁC MODEL
++  // -----------------------------------------------------------------
++
+   return {
+     assignments,
+     cart,
+@@ -204,6 +348,8 @@ function initModels(sequelize) {
+     users,
+   };
+ }
++
++// Export hàm initModels
+ module.exports = initModels;
+ module.exports.initModels = initModels;
+ module.exports.default = initModels;
+diff --git a/elearning-backend/src/services/category.service.js b/elearning-backend/src/services/category.service.js
+index fa8541e..306e054 100644
+--- a/elearning-backend/src/services/category.service.js
++++ b/elearning-backend/src/services/category.service.js
+@@ -1,61 +1,35 @@
+-// src/services/category.service.js
+-const { categories } = require('../models/'); // Import model từ file index của models
++// services/category.service.js
+ 
+-const categoryService = {
+-    /**
+-     * Tạo mới một danh mục
+-     * @param {object} data - Dữ liệu cho danh mục mới (categoryName, description)
+-     * @returns {Promise<Category>}
+-     */
+-    createCategory: async (data) => {
+-        // Sequelize sẽ tự động ánh xạ categoryName -> categoryname khi tạo record
+-        return await categories.create(data);
+-    },
++const { categories, courses } = require('../models');
+ 
+-    /**
+-     * Lấy tất cả danh mục
+-     * @returns {Promise<Category[]>}
+-     */
+-    getAllCategories: async () => {
+-        return await categories.findAll();
+-    },
++exports.getAllCategories = async () => {
++  return await categories.findAll({
++    include: [{
++      model: courses,
++      as: 'courses',
++      attributes: ['courseid', 'coursename'] // Chỉ lấy thông tin cơ bản
++    }]
++  });
++};
+ 
+-    /**
+-     * Lấy một danh mục theo ID
+-     * @param {number} id - ID của danh mục
+-     * @returns {Promise<Category|null>}
+-     */
+-    getCategoryById: async (id) => {
+-        return await categories.findByPk(id);
+-    },
++exports.getCategoryById = async (id) => {
++  return await categories.findByPk(id, {
++    include: [{ model: courses, as: 'courses' }] // Lấy tất cả khóa học
++  });
++};
+ 
+-    /**
+-     * Cập nhật danh mục
+-     * @param {number} id - ID của danh mục cần cập nhật
+-     * @param {object} data - Dữ liệu cần cập nhật
+-     * @returns {Promise<Category|null>}
+-     */
+-    updateCategory: async (id, data) => {
+-        const category = await categories.findByPk(id);
+-        if (category) {
+-            return await category.update(data);
+-        }
+-        return null;
+-    },
++exports.createCategory = async (categoryData) => {
++  return await categories.create(categoryData);
++};
+ 
+-    /**
+-     * Xóa danh mục
+-     * @param {number} id - ID của danh mục cần xóa
+-     * @returns {Promise<boolean>}
+-     */
+-    deleteCategory: async (id) => {
+-        const category = await categories.findByPk(id);
+-        if (category) {
+-            await category.destroy();
+-            return true;
+-        }
+-        return false;
+-    }
++exports.updateCategory = async (id, categoryData) => {
++  const category = await categories.findByPk(id);
++  if (!category) throw new Error('Category not found');
++  return await category.update(categoryData);
+ };
+ 
+-module.exports = categoryService;
++exports.deleteCategory = async (id) => {
++  const category = await categories.findByPk(id);
++  if (!category) throw new Error('Category not found');
++  return await category.destroy();
++};
+\ No newline at end of file
+diff --git a/elearning-backend/src/services/course.service.js b/elearning-backend/src/services/course.service.js
+index e69de29..db3a597 100644
+--- a/elearning-backend/src/services/course.service.js
++++ b/elearning-backend/src/services/course.service.js
+@@ -0,0 +1,56 @@
++// services/course.service.js
++// Import các model từ file index
++const { courses, chapters, lessons, users, categories } = require('../models');
++
++// Lấy tất cả khóa học (bao gồm giảng viên và danh mục)
++exports.getAllCourses = async () => {
++  return await courses.findAll({
++    include: [
++      { model: users, as: 'teacher', attributes: ['userid', 'fullname', 'email'] },
++      { model: categories, as: 'category' }
++    ]
++  });
++};
++
++// Lấy 1 khóa học (bao gồm tất cả chương, bài học, giảng viên, danh mục)
++exports.getCourseById = async (courseId) => {
++  return await courses.findByPk(courseId, {
++    include: [
++      { model: users, as: 'teacher', attributes: ['userid', 'fullname'] },
++      { model: categories, as: 'category' },
++      {
++        model: chapters,
++        as: 'chapters',
++        include: [{ 
++          model: lessons, 
++          as: 'lessons',
++          attributes: ['lessonid', 'title', 'sortorder'] // Chỉ lấy thông tin cần thiết
++        }]
++      }
++    ],
++    order: [
++      [chapters, 'sortorder', 'ASC'], // Sắp xếp chương
++      [chapters, lessons, 'sortorder', 'ASC'] // Sắp xếp bài học
++    ]
++  });
++};
++
++// Tạo khóa học mới
++exports.createCourse = async (courseData) => {
++  // courseData sẽ là req.body
++  return await courses.create(courseData);
++};
++
++// Cập nhật khóa học
++exports.updateCourse = async (courseId, courseData) => {
++  const course = await courses.findByPk(courseId);
++  if (!course) throw new Error('Course not found');
++  return await course.update(courseData);
++};
++
++// Xóa khóa học
++exports.deleteCourse = async (courseId) => {
++  const course = await courses.findByPk(courseId);
++  if (!course) throw new Error('Course not found');
++  return await course.destroy();
++};
+\ No newline at end of file

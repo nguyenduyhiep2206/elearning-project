@@ -1,0 +1,203 @@
+# ============================================================================
+# DOCKER-COMPOSE VOI DAY DU RUNTIME SECURITY
+# Danh cho E-Learning Platform
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # FRONTEND - Chi public network
+  # ============================================
+  frontend:
+    build: ../../elearning-frontend
+    container_name: secure-elearning-frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - frontend-net
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    depends_on:
+      - backend
+
+  # ============================================
+  # BACKEND - Giua frontend va database
+  # ============================================
+  backend:
+    build:
+      context: ../../elearning-backend
+      dockerfile: ../security-demo/1-image-hardening/Dockerfile.secure
+    container_name: secure-elearning-backend
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - frontend-net      # Co the giao tiep voi frontend
+      - backend-net       # Co the giao tiep voi database
+    
+    secrets:
+      - db-password
+      - jwt-secret
+      - cloudinary-secret
+      - vnpay-secret
+      - google-secret
+    
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=elearning
+      - DB_USER=elearndb
+      - DB_PASSWORD_FILE=/run/secrets/db-password
+      - JWT_SECRET_FILE=/run/secrets/jwt-secret
+      - JWT_EXPIRES_IN=7d
+      
+      # Cloudinary
+      - CLOUDINARY_CLOUD_NAME=dhd3gr6dp
+      - CLOUDINARY_API_KEY=979394131622718
+      - CLOUDINARY_API_SECRET_FILE=/run/secrets/cloudinary-secret
+      
+      # VNPay
+      - VNPAY_TMN_CODE=17EJVP1S
+      - VNPAY_HASH_SECRET_FILE=/run/secrets/vnpay-secret
+      
+      # Google OAuth
+      - GOOGLE_CLIENT_ID=782532430418-7ms3knfkd20e8henb3d8rc4l8tshhkdu.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET_FILE=/run/secrets/google-secret
+      - GOOGLE_CALLBACK_URL=http://localhost:3003/api/v1/auth/google/callback
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Drop all capabilities, chi them nhung gi can
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    
+    # Volumes cho uploads (can ghi)
+    volumes:
+      - uploads-data:/app/public/uploads
+      - certificates-data:/app/public/certificates
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1', r => process.exit(r.statusCode < 500 ? 0 : 1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    
+    depends_on:
+      database:
+        condition: service_healthy
+
+  # ============================================
+  # DATABASE - Chi internal network
+  # ============================================
+  database:
+    image: postgres:15-alpine
+    container_name: secure-elearning-database
+    
+    networks:
+      - backend-net       # CHI trong mang internal
+    
+    # KHONG co ports mapping = Khong the truy cap tu ben ngoai
+    # ports:
+    #   - "5432:5432"     # KHONG MO PORT RA NGOAI!
+    
+    environment:
+      - POSTGRES_DB=elearning
+      - POSTGRES_USER=elearndb
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    
+    secrets:
+      - db-password
+    
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U elearndb -d elearning"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  frontend-net:
+    driver: bridge
+  
+  backend-net:
+    driver: bridge
+    internal: true        # INTERNAL = Khong co internet access
+
+# ============================================
+# SECRETS
+# ============================================
+secrets:
+  db-password:
+    file: ../secrets/db-password.txt
+  jwt-secret:
+    file: ../secrets/jwt-secret.txt
+  cloudinary-secret:
+    file: ../secrets/cloudinary-secret.txt
+  vnpay-secret:
+    file: ../secrets/vnpay-secret.txt
+  google-secret:
+    file: ../secrets/google-secret.txt
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  db-data:
+    driver: local
+  uploads-data:
+    driver: local
+  certificates-data:
+    driver: local

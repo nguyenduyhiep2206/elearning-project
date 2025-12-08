@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./elearning-backend
+    container_name: docker-elearning-backend
+    ports:
+      - '3000:3000'
+    networks:
+      - elearning
+    env_file:
+      - ./elearning-backend/.env
+    depends_on: []
+
+  frontend:
+    build: ./elearning-frontend
+    container_name: docker-elearning-frontend
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    networks:
+      - elearning
+
+networks:
+  elearning:
+    driver: bridge

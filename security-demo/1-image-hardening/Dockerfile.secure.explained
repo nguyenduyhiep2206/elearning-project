@@ -1,0 +1,112 @@
+# ╔════════════════════════════════════════════════════════════════════╗
+# ║         GIẢI THÍCH CHI TIẾT DOCKERFILE SECURE                       ║
+# ╚════════════════════════════════════════════════════════════════════╝
+
+# ============================================
+# 1. MULTI-STAGE BUILD
+# ============================================
+# 
+# Tại sao dùng multi-stage?
+# - Stage 1 (builder): Cài đặt dependencies
+# - Stage 2 (production): Chỉ copy những gì cần
+# - Kết quả: Image nhỏ hơn, không chứa build tools
+#
+# Ví dụ so sánh:
+# - Single stage: 1.2GB (chứa npm cache, build tools)
+# - Multi-stage: 180MB (chỉ có runtime)
+
+FROM node:20-alpine AS builder
+# ...build steps...
+
+FROM node:20-alpine AS production
+COPY --from=builder /app/node_modules ./node_modules
+
+# ============================================
+# 2. ALPINE LINUX
+# ============================================
+#
+# node:20 vs node:20-alpine
+# 
+# | Metric          | node:20    | node:20-alpine |
+# |-----------------|------------|----------------|
+# | Base image size | ~1GB       | ~130MB         |
+# | Packages        | 400+       | 30             |
+# | CVE count       | 50+        | 5-10           |
+# | Attack surface  | Large      | Minimal        |
+
+# ============================================
+# 3. NON-ROOT USER
+# ============================================
+#
+# Tại sao không chạy với root?
+# - Nếu attacker exploit được app, họ có quyền root
+# - Có thể escape container với root privileges
+# - Best practice: Principle of Least Privilege
+#
+# Cách tạo non-root user trong Alpine:
+
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Giải thích:
+# -g 1001: Group ID
+# -S: System group (no password)
+# -u 1001: User ID  
+# -G appgroup: Add user to group
+
+# Chuyển sang user này:
+USER appuser
+
+# ============================================
+# 4. COPY WITH OWNERSHIP
+# ============================================
+#
+# Thay vì: COPY . .
+# Dùng: COPY --chown=appuser:appgroup src/ ./src/
+#
+# Lợi ích:
+# - Không copy file nhạy cảm (.env, .git)
+# - File có đúng ownership
+# - Non-root user có thể đọc
+
+# ============================================
+# 5. HEALTH CHECK
+# ============================================
+#
+# Tại sao cần health check?
+# - Docker/K8s biết container có healthy không
+# - Tự động restart nếu unhealthy
+# - Load balancer biết để route traffic
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/health'...)"
+
+# Giải thích parameters:
+# --interval=30s: Check mỗi 30 giây
+# --timeout=3s: Timeout sau 3 giây
+# --start-period=5s: Chờ 5s sau khi start mới check
+# --retries=3: Fail 3 lần mới coi là unhealthy
+
+# ============================================
+# 6. ENVIRONMENT VARIABLES
+# ============================================
+
+ENV NODE_ENV=production
+
+# Tại sao quan trọng?
+# - Express.js: Tắt debug mode
+# - Logging: Production-level logs
+# - Performance: Enable caching, optimizations
+
+# ============================================
+# 7. CMD vs ENTRYPOINT
+# ============================================
+#
+# Dùng: CMD ["node", "src/index.js"]
+# Không dùng: CMD ["npm", "start"]
+#
+# Lý do:
+# - npm start tạo thêm process (npm -> node)
+# - Signals (SIGTERM) không đến được app
+# - Graceful shutdown không hoạt động
+

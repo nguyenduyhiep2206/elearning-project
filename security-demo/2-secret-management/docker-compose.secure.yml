@@ -1,0 +1,83 @@
+# ============================================================================
+# CACH DUNG - SU DUNG DOCKER SECRETS
+# Secrets duoc mount an toan vao container
+# ============================================================================
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../../elearning-backend
+      dockerfile: ../security-demo/1-image-hardening/Dockerfile.secure
+    container_name: secure-elearning-backend
+    ports:
+      - "3002:3000"
+    networks:
+      - demo-network
+    
+    # Khai bao secrets
+    secrets:
+      - db-password
+      - jwt-secret
+      - cloudinary-secret
+      - vnpay-secret
+      - google-secret
+    
+    environment:
+      # Chi chua path den secret files, KHONG co gia tri thuc
+      - DB_HOST=ep-muddy-mountain-a4bnlpnx-pooler.us-east-1.aws.neon.tech
+      - DB_PORT=5432
+      - DB_NAME=elearning
+      - DB_USER=elearndb
+      - DB_PASSWORD_FILE=/run/secrets/db-password
+      
+      - JWT_SECRET_FILE=/run/secrets/jwt-secret
+      - JWT_EXPIRES_IN=7d
+      
+      - CLOUDINARY_CLOUD_NAME=my-cloud
+      - CLOUDINARY_API_KEY=979394131622718
+      - CLOUDINARY_API_SECRET_FILE=/run/secrets/cloudinary-secret
+      
+      - VNPAY_TMN_CODE=17EJVP1S
+      - VNPAY_HASH_SECRET_FILE=/run/secrets/vnpay-secret
+      
+      # Google OAuth
+      - GOOGLE_CLIENT_ID=782532430418-7ms3knfkd20e8henb3d8rc4l8tshhkdu.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET_FILE=/run/secrets/google-secret
+      - GOOGLE_CALLBACK_URL=http://localhost:3002/api/v1/auth/google/callback
+      
+      - NODE_ENV=production
+      - PORT=3000
+
+# Dinh nghia secrets
+secrets:
+  db-password:
+    file: ../secrets/db-password.txt
+  jwt-secret:
+    file: ../secrets/jwt-secret.txt
+  cloudinary-secret:
+    file: ../secrets/cloudinary-secret.txt
+  vnpay-secret:
+    file: ../secrets/vnpay-secret.txt
+  google-secret:
+    file: ../secrets/google-secret.txt
+
+networks:
+  demo-network:
+    driver: bridge
+
+# UU DIEM CUA DOCKER SECRETS:
+#
+# 1. Secrets duoc mount vao /run/secrets/ (tmpfs - RAM)
+#    - Khong ghi xuong disk
+#    - Tu dong xoa khi container stop
+#
+# 2. Secrets KHONG hien thi trong:
+#    - docker inspect
+#    - docker logs
+#    - Environment variables (chi thay _FILE path)
+#
+# 3. File secrets khong commit len Git (them vao .gitignore)
+#
+# 4. Co the rotate secrets ma khong rebuild image

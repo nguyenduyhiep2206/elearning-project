@@ -1,0 +1,19 @@
+# Bỏ qua tất cả các thư mục node_modules
+/node_modules
+/*/node_modules
+
+# Bỏ qua các file biến môi trường
+.env
+.env.*
+*/.env
+*/.env.*
+
+# Bỏ qua các thư mục build
+/dist
+/build
+/.output
+
+# Bỏ qua các file log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
