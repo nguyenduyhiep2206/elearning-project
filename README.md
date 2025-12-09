@@ -113,7 +113,8 @@ Vulnerabilities: 188 → 0       (giảm 100%)
 User:           root → appuser  (an toàn hơn)
 ```
 
-![Image Size Comparison](https://via.placeholder.com/600x300?text=Image+Size+Comparison)
+<img width="857" height="387" alt="image" src="https://github.com/user-attachments/assets/b344c549-b754-40ea-83bc-af26c8374226" />
+
 
 **Vulnerability Scan Results:**
 ![Vulnerability Scan](https://via.placeholder.com/600x300?text=Vulnerability+Scan+Results)
