@@ -114,9 +114,11 @@ User:           root → appuser  (an toàn hơn)
 ```
 
 <img width="1918" height="720" alt="image" src="https://github.com/user-attachments/assets/2e262cd2-96d3-4e39-986c-6cd0c41942f0" />
+
 ![Image Size Comparison]
 
 <img width="857" height="387" alt="image" src="https://github.com/user-attachments/assets/b344c549-b754-40ea-83bc-af26c8374226" />
+
 ![Vulnerability Scan]
 
 ### 2. Secret Management Demo
@@ -126,8 +128,10 @@ User:           root → appuser  (an toàn hơn)
 - **SECURE**: Chỉ hiển thị file path, password được bảo vệ
 
 <img width="880" height="469" alt="image" src="https://github.com/user-attachments/assets/5a8aa366-9a28-4ac2-b415-0b52dbcfbac9" />
+
 ![Secret Management Demo Insecure]
 <img width="1918" height="1018" alt="image" src="https://github.com/user-attachments/assets/ee6d941b-4955-40a0-a893-fa7b0c371d53" />
+
 ![Secret Management Demo Secure]
 
 ### 3. Runtime Security Demo
@@ -144,6 +148,7 @@ Database: CPU 1.0, RAM 1GB
 ```
 
 <img width="1298" height="745" alt="image" src="https://github.com/user-attachments/assets/82892b20-9061-477a-a07e-cddcedce9723" />
+
 ![Runtime Security Demo]
 
 ---
