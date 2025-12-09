@@ -1,197 +1,196 @@
-# Demo Bao mat Container Web (Docker)
+# E-Learning Platform with Container Security Demo
 
-## Mon hoc: Phat trien phan mem web an toan
-## De tai: Bao mat Container Web - Demo Hardening Image va Secret Management
-## Project: E-Learning Platform
+**Đề tài:** Bảo mật Container Web (Docker) – Demo hardening image và secret management
 
----
-
-## Gioi thieu
-
-Project nay demo cac ky thuat bao mat container web SU DUNG TRUC TIEP project E-Learning:
-
-| # | Chu de | Mo ta |
-|---|--------|-------|
-| 1 | **Image Hardening** | Toi uu va bao mat Docker image cho elearning-backend |
-| 2 | **Secret Management** | Quan ly DB password, JWT secret, API keys an toan |
-| 3 | **Runtime Security** | Bao mat container khi chay (network, resources, capabilities) |
+**Môn học:** Phát triển phần mềm web an toàn
 
 ---
 
-## Yeu cau he thong
+## 👥 Danh sách thành viên nhóm
 
-### Bat buoc
-- Docker Desktop (Windows/Mac) hoac Docker Engine (Linux)
-- Docker Compose v2+
-- Project E-Learning (da co san)
+| STT | Họ tên | MSSV | Nhiệm vụ |
+|-----|--------|------|----------|
+| 1 | Nguyễn Thị Trinh | 22810310410 | Image Hardening |
+| 2 | Trịnh Hoài Nam | 22810310433 | Secret Management |
+| 3 | Nguyễn Duy Hiệp | 22810310354 | Runtime Security + Tổng hợp |
 
-### Khuyen nghi (de scan lo hong)
+**Nhóm trưởng:** Nguyễn Duy Hiệp
+
+---
+
+## 📋 Phân chia công việc
+
+### 👤 Thành viên 1: Docker Image Hardening
+**Thời gian:**
+- Nghiên cứu lý thuyết về hardening image
+- Multi-stage builds và tối ưu Dockerfile
+- Non-root user implementation
+- Minimal base image (Alpine Linux)
+- Security scanning với Trivy
+
+### 👤 Thành viên 2: Secret Management
+**Thời gian:**
+- Nghiên cứu các phương pháp quản lý secret
+- Docker Secrets implementation
+- Environment variables best practices
+- So sánh hardcoded vs secure
+- .gitignore và bảo vệ file .env
+
+### 👤 Thành viên 3: Runtime Security & Tổng hợp
+**Thời gian:**
+- Nghiên cứu runtime security
+- Network isolation với Docker networks
+- Resource limits và capabilities
+- Read-only filesystem
+- Tổng hợp báo cáo và chuẩn bị demo
+
+---
+
+## 🚀 Hướng dẫn sử dụng
+
+### Yêu cầu hệ thống
+- **Docker Desktop** (Windows/Mac) hoặc Docker Engine (Linux)
+- **Docker Compose** v2+
+- **Trivy** (tùy chọn, để scan vulnerabilities)
+- **Node.js** (tùy chọn, để chạy local development)
+
+### Cài đặt và chạy
+
+#### Option 1: Chạy với Docker
+
 ```bash
-# Windows (voi Chocolatey)
-choco install trivy
+# 1. Clone repository
+git clone https://github.com/nguyenduyhiep2206/elearning-project
+cd elearning-project
 
-# Mac (voi Homebrew)
-brew install trivy
+# 2. Chạy toàn bộ hệ thống
+docker-compose up --build
+
+# 3. Truy cập ứng dụng
+# Frontend: http://localhost:5173
+# Backend API: http://localhost:3000/api/v1
+```
+
+#### Option 2: Chạy local development (Khuyến nghị)
+
+```bash
+# 1. Cài đặt dependencies
+cd elearning-frontend && npm install
+cd ../elearning-backend && npm install
+
+# 2. Chạy frontend
+cd elearning-frontend && npm run dev
+
+# 3. Chạy backend (terminal khác)
+cd elearning-backend && npm run dev
+```
+
+### Demo bảo mật container
+
+```bash
+# Vào thư mục demo
+cd security-demo
+
+# Chạy tất cả demo
+.\demo.ps1 all
+
+# Hoặc chạy từng phần
+.\demo.ps1 1    # Image Hardening
+.\demo.ps1 2    # Secret Management
+.\demo.ps1 3    # Runtime Security
 ```
 
 ---
 
-## Cau truc thu muc
+## 📸 Kết quả demo
+
+### 1. Image Hardening Results
+
+**Before vs After Comparison:**
+```
+Image Size:     1.5GB → 200MB   (giảm 85%)
+Vulnerabilities: 188 → 0       (giảm 100%)
+User:           root → appuser  (an toàn hơn)
+```
+
+![Image Size Comparison](https://via.placeholder.com/600x300?text=Image+Size+Comparison)
+
+**Vulnerability Scan Results:**
+![Vulnerability Scan](https://via.placeholder.com/600x300?text=Vulnerability+Scan+Results)
+
+### 2. Secret Management Demo
+
+**Insecure vs Secure:**
+- **INSECURE**: `docker inspect` hiển thị password rõ ràng
+- **SECURE**: Chỉ hiển thị file path, password được bảo vệ
+
+![Secret Management Demo](https://via.placeholder.com/600x300?text=Secret+Management+Demo)
+
+### 3. Runtime Security Demo
+
+**Network Isolation:**
+- Database không expose port ra ngoài
+- Chỉ backend mới truy cập được database
+
+**Resource Limits:**
+```
+Frontend: CPU 0.5, RAM 512MB
+Backend:  CPU 1.0, RAM 1GB
+Database: CPU 1.0, RAM 1GB
+```
+
+![Runtime Security Demo](https://via.placeholder.com/600x300?text=Runtime+Security+Demo)
+
+---
+
+## 🏗️ Cấu trúc project
 
 ```
 elearning-project/
-├── elearning-backend/           # Backend thuc cua project
-├── elearning-frontend/          # Frontend thuc cua project
-├── docker-compose.yml           # Docker compose goc
-│
-└── security-demo/               # THU MUC DEMO BAO MAT
-    ├── 1-image-hardening/
-    │   ├── Dockerfile.insecure  # Demo khong an toan
-    │   ├── Dockerfile.secure    # Demo da hardening
-    │   └── README.md
-    │
-    ├── 2-secret-management/
-    │   ├── docker-compose.insecure.yml
-    │   ├── docker-compose.secure.yml
-    │   └── README.md
-    │
-    ├── 3-runtime-security/
-    │   ├── docker-compose.full-security.yml
-    │   └── README.md
-    │
-    ├── secrets/                 # Secret files (KHONG commit)
-    │   ├── db-password.txt
-    │   ├── jwt-secret.txt
-    │   ├── cloudinary-secret.txt
-    │   └── vnpay-secret.txt
-    │
-    ├── demo.ps1                 # Script demo (Windows)
-    └── README.md                # File nay
+├── elearning-frontend/          # React frontend
+├── elearning-backend/           # Node.js backend
+├── security-demo/               # Demo bảo mật container
+│   ├── 1-image-hardening/       # Hardening image demo
+│   ├── 2-secret-management/     # Secret management demo
+│   ├── 3-runtime-security/      # Runtime security demo
+│   ├── secrets/                 # Secret files
+│   └── demo.ps1                 # Demo script
+├── docker-compose.yml           # Docker compose chính
+└── README.md                    # File này
 ```
 
 ---
 
-## Huong dan chay demo
+## 🔧 Công nghệ sử dụng
 
-### Windows (PowerShell)
+### Frontend
+- **React** 18+
+- **Vite** - Build tool
+- **Tailwind CSS** - Styling
+- **Axios** - HTTP client
 
-```powershell
-cd d:\elearning-project\security-demo
+### Backend
+- **Node.js** 20+
+- **Express.js** - Web framework
+- **PostgreSQL** - Database
+- **JWT** - Authentication
+- **Passport.js** - OAuth integration
 
-# Chay TAT CA demo
-.\demo.ps1 all
-
-# Hoac chay tung phan
-.\demo.ps1 1        # Demo Image Hardening
-.\demo.ps1 2        # Demo Secret Management
-.\demo.ps1 3        # Demo Runtime Security
-
-# Don dep sau demo
-.\demo.ps1 cleanup
-```
-
----
-
-## Noi dung demo chi tiet
-
-### Demo 1: Image Hardening
-
-**So sanh TRUOC va SAU khi hardening elearning-backend:**
-
-| Metric | Insecure (node:20) | Secure (alpine) | Cai thien |
-|--------|-------------------|-----------------|-----------|
-| Image Size | ~1.5GB | ~200MB | -85% |
-| CVE Count | 50+ | 5-10 | -80% |
-| Running as | root | appuser | An toan |
-| Multi-stage | No | Yes | Toi uu |
-| Health Check | No | Yes | Giam sat |
-
-**Commands demo:**
-```bash
-# So sanh kich thuoc
-docker images | findstr elearning
-
-# So sanh user
-docker run --rm elearning:insecure whoami  # root
-docker run --rm elearning:secure whoami    # appuser
-
-# Scan lo hong
-trivy image --severity HIGH,CRITICAL elearning:insecure
-trivy image --severity HIGH,CRITICAL elearning:secure
-```
-
-### Demo 2: Secret Management
-
-**So sanh cach quan ly secrets cua E-Learning:**
-
-| Aspect | Insecure | Secure |
-|--------|----------|--------|
-| DB_PASSWORD | Hardcode trong compose | Docker Secrets |
-| JWT_SECRET | Plain text | /run/secrets/jwt-secret |
-| docker inspect | Thay password | Chi thay _FILE path |
-| Git commit | Lo secrets | An toan (.gitignore) |
-
-**Commands demo:**
-```bash
-# Kiem tra insecure - thay password
-docker inspect insecure-elearning-backend | findstr "PASSWORD"
-# Output: DB_PASSWORD=SuperSecretPassword123!
-
-# Kiem tra secure - chi thay path
-docker inspect secure-elearning-backend | findstr "PASSWORD"
-# Output: DB_PASSWORD_FILE=/run/secrets/db-password
-```
-
-### Demo 3: Runtime Security
-
-**Cac ky thuat bao mat runtime cho E-Learning:**
-
-1. **Network Isolation**: 
-   - Frontend: public network
-   - Backend: public + internal
-   - Database: CHI internal (khong expose port)
-
-2. **Resource Limits**: 
-   - Backend: max 1 CPU, 1GB RAM
-   - Database: max 1 CPU, 1GB RAM
-
-3. **Security Options**:
-   - no-new-privileges: true
-   - Drop ALL capabilities
-   - Chi add NET_BIND_SERVICE
-
-**Commands demo:**
-```bash
-# Database khong co port exposed
-docker port secure-elearning-database
-# Output: (empty) - An toan!
-
-# Kiem tra resource limits
-docker stats --no-stream
-
-# Kiem tra security options
-docker inspect secure-elearning-backend --format "{{.HostConfig.SecurityOpt}}"
-```
+### Container Security
+- **Docker** - Containerization
+- **Trivy** - Vulnerability scanner
+- **Docker Secrets** - Secret management
+- **CIS Docker Benchmark** - Security standards
 
 ---
 
-## Tai lieu tham khao
+## 📊 Metrics & Results
 
-- [Docker Security Best Practices](https://docs.docker.com/develop/security-best-practices/)
-- [OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html)
-- [Trivy Container Scanner](https://github.com/aquasecurity/trivy)
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Image Size | 1.5GB | 200MB | -85% |
+| OS Vulnerabilities | 188 | 0 | -100% |
+| Security Configurations | Basic | Advanced | ✅ |
+| Secret Exposure | High | None | ✅ |
+| Runtime Security | None | Full | ✅ |
 
----
-
-## Nhom thuc hien
-
-| STT | Ho ten | MSSV | Nhiem vu |
-|-----|--------|------|----------|
-| 1 | ... | ... | Image Hardening |
-| 2 | ... | ... | Secret Management |
-| 3 | ... | ... | Runtime Security + Tong hop |
-
----
-
-**Mon hoc**: Phat trien phan mem web an toan  
-**Nam hoc**: 2024-2025

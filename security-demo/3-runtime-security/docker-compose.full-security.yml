@@ -1,14 +1,10 @@
-# ============================================================================
 # DOCKER-COMPOSE VOI DAY DU RUNTIME SECURITY
 # Danh cho E-Learning Platform
-# ============================================================================
 
 version: '3.8'
 
 services:
-  # ============================================
   # FRONTEND - Chi public network
-  # ============================================
   frontend:
     build: ../../elearning-frontend
     container_name: secure-elearning-frontend
@@ -49,6 +45,7 @@ services:
       - frontend-net      # Co the giao tiep voi frontend
       - backend-net       # Co the giao tiep voi database
     
+    # Khai bao secrets
     secrets:
       - db-password
       - jwt-secret
@@ -79,7 +76,7 @@ services:
       # Google OAuth
       - GOOGLE_CLIENT_ID=782532430418-7ms3knfkd20e8henb3d8rc4l8tshhkdu.apps.googleusercontent.com
       - GOOGLE_CLIENT_SECRET_FILE=/run/secrets/google-secret
-      - GOOGLE_CALLBACK_URL=http://localhost:3003/api/v1/auth/google/callback
+      - GOOGLE_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/callback
     
     # Resource limits
     deploy:
@@ -95,7 +92,7 @@ services:
     security_opt:
       - no-new-privileges:true
     
-    # Drop all capabilities, chi them nhung gi can
+    # Drop all capabilities bo quyen, chi them nhung gi can
     cap_drop:
       - ALL
     cap_add:
@@ -126,7 +123,7 @@ services:
     container_name: secure-elearning-database
     
     networks:
-      - backend-net       # CHI trong mang internal
+      - backend-net       # CHI trong mang internal(mang rieng)
     
     # KHONG co ports mapping = Khong the truy cap tu ben ngoai
     # ports:

@@ -8,9 +8,9 @@ param(
 )
 
 $ErrorActionPreference = "Continue"
-$DemoPath = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectPath = Split-Path -Parent $DemoPath
-
+$DemoPath = Split-Path -Parent $MyInvocation.MyCommand.Path#lay duong dan cua file demo.ps1
+$ProjectPath = Split-Path -Parent $DemoPath#lay duong dan cua project
+#ham in ra tieu de
 function Write-Header {
     param([string]$Text)
     Write-Host ""
@@ -19,12 +19,12 @@ function Write-Header {
     Write-Host "===========================================================" -ForegroundColor Cyan
     Write-Host ""
 }
-
+# ham in ra thong bao
 function Write-Step {
     param([string]$Text)
     Write-Host "[>] $Text" -ForegroundColor Green
 }
-
+# ham in ra ket qua
 function Write-Result {
     param([string]$Text, [string]$Status = "info")
     $color = switch ($Status) {
