@@ -12,7 +12,7 @@
 |-----|--------|------|----------|
 | 1 | Nguyễn Thị Trinh | 22810310410 | Image Hardening |
 | 2 | Trịnh Hoài Nam | 22810310433 | Secret Management |
-| 3 | Nguyễn Duy Hiệp | 22810310354 | Runtime Security + Tổng hợp |
+| 3 | Nguyễn Duy Hiệp | 22810310410 | Runtime Security + Tổng hợp |
 
 **Nhóm trưởng:** Nguyễn Duy Hiệp
 
